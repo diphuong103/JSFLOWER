@@ -10,15 +10,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.interfaces.ItemClickListener
 import com.denzcoskun.imageslider.models.SlideModel
+import com.example.jsflower.MenuBottomSheetFragment
 import com.example.jsflower.R
 import com.example.jsflower.adapter.PopularAdapter
 import com.example.jsflower.databinding.FragmentHomeBinding
 
-/**
- * A simple [Fragment] subclass.
- * Use the [HomeFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
 
@@ -32,6 +29,11 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater, container, false)
+
+         binding.viewAllMenu.setOnClickListener{
+             val bottomSheetDialog= MenuBottomSheetFragment()
+             bottomSheetDialog.show(parentFragmentManager, "Test")
+         }
         return binding.root
 
 

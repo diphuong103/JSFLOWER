@@ -7,5 +7,6 @@
     <color name="red2_text">#d41746</color>
     <color name="startcolor">#EE0000</color>
     <color name="endcolor">#880000</color>
+    <color name="iconColor">#993C54</color>
 
 </resources>
