@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">JS FLOWER</string>
+    <string name="kh_m_ph_ngay">Khám phá ngay</string>
+    <string name="quot_ch_o_m_ng_b_n_n_v_i_js_flower_th_gi_i_hoa_th_gi_i_c_m_x_c_quot">🌸 \"Chào mừng bạn đến với JS Flower – Thế giới hoa, thế giới cảm xúc!\" 💐</string>
+    <string name="todo">TODO</string>
+    <string name="from_dp">From DP</string>
+    <string name="m_t_b_ng_hoa_v_n_l_i_y_u_th_ng">Một bông hoa Vạn lời yêu thương!</string>
+    <string name="flower">FLOWER</string>
+    <string name="email">Email</string>
+    <string name="password">Mật khẩu</string>
+    <string name="ho_c_ng_nh_p_b_ng">Hoặc đăng nhập bằng</string>
+    <string name="google">Google</string>
+    <string name="facebook">Facebook</string>
+    <string name="login">ĐĂNG NHẬP</string>
+    <string name="b_n_ch_a_c_t_i_kho_n">Bạn chưa có tài khoản?</string>
+    <string name="ng_nh_p_b_ng_t_i_kho_n_c_a_b_n">Đăng nhập bằng tài khoản của bạn</string>
+    <string name="t_o_t_i_kho_n">Tạo tài khoản</string>
+    <string name="ho_c_ng_k_b_ng">hoặc đăng kí bằng</string>
+    <string name="t_n_ng_i_d_ng">Tên người dùng</string>
+    <string name="ch_n_a_i_m_c_a_b_n">Chọn địa điểm của bạn</string>
+    <string name="ch_n_a_i_m">Chọn địa điểm</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
