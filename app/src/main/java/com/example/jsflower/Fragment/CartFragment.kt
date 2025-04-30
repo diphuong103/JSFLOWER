@@ -1,11 +1,14 @@
 package com.example.jsflower.Fragment
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.jsflower.CongratsBottomSheet
+import com.example.jsflower.PayOutActivity
 import com.example.jsflower.R
 import com.example.jsflower.adaptar.CartAdapter
 import com.example.jsflower.databinding.FragmentCartBinding
@@ -40,6 +43,12 @@ class CartFragment : Fragment() {
 
         binding.CartRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.CartRecyclerView.adapter = adapter
+        binding.proceedButton.setOnClickListener{
+            val intent = Intent(requireContext(), PayOutActivity::class.java)
+            startActivity(intent)
+        }
+
+
 
         return binding.root
     }

@@ -1,13 +1,16 @@
 package com.example.jsflower.adapter
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.example.jsflower.DetailsActivity
 import com.example.jsflower.databinding.PopulerItemBinding
 
-class PopularAdapter(private val items: List<String>, private val price: List<String>, private val image: List<Int>) : RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
+class PopularAdapter(private val items: List<String>, private val price: List<String>, private val image: List<Int>, private val requireContext: Context) : RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PopularViewHolder {
         val binding = PopulerItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -19,6 +22,16 @@ class PopularAdapter(private val items: List<String>, private val price: List<St
         val images = image[position]
         val price = price[position]
         holder.bind(item,price, images)
+
+        holder.itemView.setOnClickListener{
+            // Mở màn DetailsActivity
+            val intent = Intent(requireContext, DetailsActivity::class.java).apply {
+                putExtra("MenuItemName", item)
+                putExtra("MenuItemImage", images)
+            }
+            requireContext.startActivity(intent)
+
+        }
 
     }
 
