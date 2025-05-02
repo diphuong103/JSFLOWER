@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/playfairdisplaybold"
-        android:text="Đăng kí tại ngay"
+        android:text="Đăng kí ngay"
         android:textColor="@color/red_text"
         app:layout_constraintEnd_toEndOf="@+id/textView4"
         app:layout_constraintStart_toStartOf="@+id/textView4"
