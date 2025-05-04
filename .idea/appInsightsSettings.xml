@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.jsflower" />
+                  <option name="mobileSdkAppId" value="1:618247094017:android:6ff4f5bdf83a7c911ae500" />
+                  <option name="projectId" value="js-flower-55654" />
+                  <option name="projectNumber" value="618247094017" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
