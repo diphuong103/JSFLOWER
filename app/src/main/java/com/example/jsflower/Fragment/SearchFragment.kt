@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.jsflower.R
-import com.example.jsflower.adapter.MenuAdapter
+import com.example.jsflower.adaptar.MenuAdapter
 import com.example.jsflower.databinding.FragmentSearchBinding
 import androidx.appcompat.widget.SearchView  // Ensure correct import
 
@@ -36,7 +36,7 @@ class SearchFragment : Fragment() {
     ): View? {
         binding = FragmentSearchBinding.inflate(inflater, container, false)
 
-        adapter = MenuAdapter(filterMenuFlowerName, filterMenuItemPrice, filterMenuImage, requireContext())
+//        adapter = MenuAdapter(filterMenuFlowerName, filterMenuItemPrice, filterMenuImage, requireContext())
 
         binding.menuRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.menuRecyclerView.adapter = adapter
