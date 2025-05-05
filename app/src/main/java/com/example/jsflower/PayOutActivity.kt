@@ -1,23 +1,31 @@
 package com.example.jsflower
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.example.jsflower.Model.OrderDetails
 import com.example.jsflower.databinding.ActivityPayOutBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import java.text.NumberFormat
+import java.util.Locale
 
 class PayOutActivity : AppCompatActivity() {
+    private lateinit var userId: String
     private lateinit var binding: ActivityPayOutBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var databaseReference: DatabaseReference
+    private lateinit var name: String
+    private lateinit var address: String
+    private lateinit var phone: String
 
     private lateinit var flowerItemName: ArrayList<String>
     private lateinit var flowerItemPrice: ArrayList<String>
     private lateinit var flowerItemImage: ArrayList<String>
     private lateinit var flowerItemDesciption: ArrayList<String>
     private lateinit var flowerItemIngredient: ArrayList<String>
-    private lateinit var flowerItemQuantities: ArrayList<String>
+    private lateinit var flowerItemQuantities: ArrayList<Int>
 
     private var isEditing = false
     private var total = 0.0
@@ -34,48 +42,56 @@ class PayOutActivity : AppCompatActivity() {
         flowerItemName = intent.getStringArrayListExtra("FlowerItemName") ?: arrayListOf()
         flowerItemPrice = intent.getStringArrayListExtra("FlowerItemPrice") ?: arrayListOf()
         flowerItemImage = intent.getStringArrayListExtra("FlowerItemImage") ?: arrayListOf()
-        flowerItemDesciption = intent.getStringArrayListExtra("FlowerItemDesciption") ?: arrayListOf()
-        flowerItemIngredient = intent.getStringArrayListExtra("FlowerItemIngredient") ?: arrayListOf()
-        val quantities = intent.getIntegerArrayListExtra("FlowerItemQuantities")
-        if (quantities != null) {
-            flowerItemQuantities = ArrayList(quantities.map { it.toString() })
-        } else {
-            flowerItemQuantities = arrayListOf()
-            Toast.makeText(this, "Không có dữ liệu số lượng sản phẩm", Toast.LENGTH_SHORT).show()
-        }
+        flowerItemDesciption =
+            intent.getStringArrayListExtra("FlowerItemDescription") ?: arrayListOf()
+        flowerItemIngredient =
+            intent.getStringArrayListExtra("FlowerItemIngredient") ?: arrayListOf()
+        flowerItemQuantities =
+            intent.getIntegerArrayListExtra("FlowerItemQuantities") ?: arrayListOf()
 
-
-
-        // Tính tổng tiền
-        calculateTotal()
-
-        // Thiết lập các trường là không được chỉnh sửa ban đầu
-        setEditTextsEnabled(false)
+        Log.d("PayOut", "Quantity list: $flowerItemQuantities")
+        Log.d("PayOut", "Price list: $flowerItemPrice")
 
         // Lấy thông tin người dùng
         setUserData()
 
+        // Tính tổng tiền
+        total = calculateTotal()
+        binding.etTotal.isEnabled = false
+        binding.etTotal.setText(formatCurrency(total))
+
+        // Thiết lập các trường là không được chỉnh sửa ban đầu
+        setEditTextsEnabled(false)
+
         // Xử lý nút chỉnh sửa
         binding.btnEdit.setOnClickListener {
             if (!isEditing) {
-                // Bật chế độ chỉnh sửa
                 isEditing = true
                 setEditTextsEnabled(true)
+                binding.btnEdit.setImageResource(R.drawable.save) // Giả sử có icon save
+                binding.btnOrder.isEnabled = false
                 Toast.makeText(this, "Bạn có thể chỉnh sửa thông tin", Toast.LENGTH_SHORT).show()
             } else {
-                // Lưu thông tin đã chỉnh sửa
                 saveUserData()
             }
         }
 
-        binding.btnSave.setOnClickListener {
-            // Kiểm tra thông tin trước khi hiển thị bottom sheet
+        binding.btnOrder.setOnClickListener {
             if (validateData()) {
+                saveOrderToDatabase()
                 val bottomSheetDialog = CongratsBottomSheet()
-                bottomSheetDialog.show(supportFragmentManager, "Test")
+
+                name = binding.etName.text.toString().trim()
+                address = binding.etAddress.text.toString().trim()
+                phone = binding.etPhone.text.toString().trim()
+
+                placeOrder()
+
+                bottomSheetDialog.show(supportFragmentManager, "CongratsBottomSheet")
             } else {
                 Toast.makeText(this, "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show()
             }
+
         }
 
         binding.btnBack.setOnClickListener {
@@ -83,40 +99,66 @@ class PayOutActivity : AppCompatActivity() {
         }
     }
 
-    private fun calculateTotal() {
-        total = 0.0
-        val nameToTotalQuantity = mutableMapOf<String, Int>()
-        val nameToPrice = mutableMapOf<String, Double>()
-
-        for (i in flowerItemName.indices) {
-            val name = flowerItemName[i]
-            val price = flowerItemPrice.getOrNull(i)?.replace("đ", "")?.trim()?.toDoubleOrNull() ?: 0.0
-            val quantity = flowerItemQuantities.getOrNull(i)?.toIntOrNull() ?: 0
-
-            // Gộp số lượng
-            nameToTotalQuantity[name] = nameToTotalQuantity.getOrDefault(name, 0) + quantity
-
-            // Giá giữ lại giá đầu tiên (hoặc bạn có thể kiểm tra đồng nhất nếu cần)
-            if (!nameToPrice.containsKey(name)) {
-                nameToPrice[name] = price
+    private fun placeOrder() {
+        userId = auth.currentUser?.uid ?: ""
+        val time = System.currentTimeMillis()
+        val itemPushKey = databaseReference.child("OrderDetails").push().key
+        val orderDetails = OrderDetails(
+            userId,
+            name,
+            flowerItemName,
+            flowerItemPrice,
+            flowerItemImage,
+            flowerItemQuantities,
+            address,
+            total,
+            phone,
+            time,
+            itemPushKey,
+            false,
+            false
+        )
+        val orderRef = databaseReference.child("OrderDetails").child(itemPushKey!!)
+        orderRef.setValue(orderDetails).addOnSuccessListener {
+            val bottomSheetDialog = CongratsBottomSheet()
+            bottomSheetDialog.show(supportFragmentManager, "CongratsBottomSheet")
+            addOrderToHistory(orderDetails)
+        }
+            .addOnFailureListener{
+                Toast.makeText(this, "Đặt hàng thất bại -_-", Toast.LENGTH_SHORT).show()
             }
-        }
 
-        for ((name, quantity) in nameToTotalQuantity) {
-            val price = nameToPrice[name] ?: 0.0
-            total += price * quantity
-        }
-
-        binding.etTotal.setText(String.format("%.0f đ", total))
     }
 
+    private fun addOrderToHistory(orderDetails: OrderDetails) {
+        databaseReference.child("user").child(userId).child("BuyHistory")
+            .child(orderDetails.itemPushKey!!).setValue(orderDetails).addOnSuccessListener {
 
+            }
+    }
+
+    private fun formatCurrency(amount: Double): String {
+        val numberFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+        return numberFormat.format(amount)
+    }
+
+    private fun calculateTotal(): Double {
+        total = 0.0
+        for (i in 0 until flowerItemPrice.size) {
+            val priceString = flowerItemPrice[i].replace("\\D".toRegex(), "")
+            val priceInt = priceString.toIntOrNull() ?: 0
+
+            val quantity = if (i < flowerItemQuantities.size) flowerItemQuantities[i] else 1
+            total += priceInt * quantity
+        }
+        return total
+    }
 
     private fun setEditTextsEnabled(enabled: Boolean) {
         binding.etName.isEnabled = enabled
         binding.etAddress.isEnabled = enabled
         binding.etPhone.isEnabled = enabled
-        binding.etTotal.isEnabled = false  // Tổng tiền không cho phép chỉnh sửa
+        binding.etTotal.isEnabled = false // Tổng tiền luôn không được chỉnh sửa
     }
 
     private fun validateData(): Boolean {
@@ -124,7 +166,33 @@ class PayOutActivity : AppCompatActivity() {
         val address = binding.etAddress.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
 
-        return name.isNotEmpty() && address.isNotEmpty() && phone.isNotEmpty()
+        if (name.isEmpty()) {
+            binding.etName.error = "Vui lòng nhập tên"
+            return false
+        }
+
+        if (address.isEmpty()) {
+            binding.etAddress.error = "Vui lòng nhập địa chỉ"
+            return false
+        }
+
+        if (phone.isEmpty()) {
+            binding.etPhone.error = "Vui lòng nhập số điện thoại"
+            return false
+        }
+
+        // Kiểm tra định dạng số điện thoại
+        if (!isValidPhoneNumber(phone)) {
+            binding.etPhone.error = "Số điện thoại không hợp lệ"
+            return false
+        }
+
+        return true
+    }
+
+    private fun isValidPhoneNumber(phone: String): Boolean {
+        // Đơn giản kiểm tra xem số điện thoại có ít nhất 10 chữ số và chỉ chứa số
+        return phone.length >= 10 && phone.all { it.isDigit() }
     }
 
     private fun setUserData() {
@@ -147,7 +215,8 @@ class PayOutActivity : AppCompatActivity() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@PayOutActivity, "Lỗi khi tải thông tin", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@PayOutActivity, "Lỗi khi tải thông tin", Toast.LENGTH_SHORT)
+                        .show()
                 }
             })
         }
@@ -161,8 +230,7 @@ class PayOutActivity : AppCompatActivity() {
             val address = binding.etAddress.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
 
-            if (name.isEmpty() || address.isEmpty() || phone.isEmpty()) {
-                Toast.makeText(this, "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show()
+            if (!validateData()) {
                 return
             }
 
@@ -183,5 +251,54 @@ class PayOutActivity : AppCompatActivity() {
                     Toast.makeText(this, "Cập nhật thất bại", Toast.LENGTH_SHORT).show()
                 }
         }
+    }
+
+    private fun saveOrderToDatabase() {
+        val user = auth.currentUser
+        user?.let { firebaseUser ->
+            val userId = firebaseUser.uid
+            val orderReference =
+                databaseReference.child("user").child(userId).child("orders").push()
+
+            val orderItems = ArrayList<Map<String, Any>>()
+
+            for (i in flowerItemName.indices) {
+                val item = HashMap<String, Any>()
+                item["name"] = flowerItemName[i]
+                item["price"] = flowerItemPrice[i]
+                item["quantity"] = flowerItemQuantities.getOrElse(i) { 1 }
+                item["image"] = flowerItemImage[i]
+                orderItems.add(item)
+            }
+
+            val orderMap = HashMap<String, Any>()
+            orderMap["items"] = orderItems
+            orderMap["total"] = total
+            orderMap["timestamp"] = ServerValue.TIMESTAMP
+            orderMap["status"] = "pending"
+            orderMap["customerName"] = binding.etName.text.toString().trim()
+            orderMap["customerAddress"] = binding.etAddress.text.toString().trim()
+            orderMap["customerPhone"] = binding.etPhone.text.toString().trim()
+
+            orderReference.setValue(orderMap)
+                .addOnSuccessListener {
+                    // Xóa giỏ hàng sau khi đặt hàng thành công
+                    clearCart(userId)
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Lưu đơn hàng thất bại", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun clearCart(userId: String) {
+        databaseReference.child("user").child(userId).child("CartItems")
+            .removeValue()
+            .addOnSuccessListener {
+                Log.d("PayOut", "Đã xóa giỏ hàng sau khi đặt hàng")
+            }
+            .addOnFailureListener {
+                Log.e("PayOut", "Lỗi khi xóa giỏ hàng: ${it.message}")
+            }
     }
 }

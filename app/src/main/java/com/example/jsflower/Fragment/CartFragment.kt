@@ -43,8 +43,20 @@ class CartFragment : Fragment() {
         getCartItems()
 
         binding.proceedButton.setOnClickListener {
-            userId = auth.currentUser?.uid ?: ""
-            getOrderItemsDetail()
+            if (::cartAdapter.isInitialized && flowerNames.isNotEmpty()) {
+                val flowerQuantities = cartAdapter.getUpdatedItemsQuantities()
+
+                orderNow(
+                    flowerNames,
+                    flowerPrices,
+                    flowerDescriptions,
+                    flowerImagesUri,
+                    flowerIngredients,
+                    flowerQuantities
+                )
+            } else {
+                Toast.makeText(context, "Giỏ hàng trống", Toast.LENGTH_SHORT).show()
+            }
         }
 
         return binding.root
@@ -71,7 +83,14 @@ class CartFragment : Fragment() {
                     cartItem?.flowerIngredient?.let { flowerIngredients.add(it) }
                     cartItem?.flowerQuantity?.let { quantity.add(it) }
                 }
-                setAdapter()
+
+                if (flowerNames.isNotEmpty()) {
+                    setAdapter()
+                } else {
+                    // Hiển thị thông báo giỏ hàng trống nếu cần
+                    binding.CartRecyclerView.visibility = View.GONE
+                    // Tùy chọn: Thêm một TextView để hiển thị thông báo giỏ hàng trống
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -87,42 +106,13 @@ class CartFragment : Fragment() {
             flowerPrices,
             flowerDescriptions,
             flowerImagesUri,
-            quantity,
-            flowerIngredients
+            flowerIngredients,
+            quantity
         )
+
         binding.CartRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         binding.CartRecyclerView.adapter = cartAdapter
-    }
-
-    private fun getOrderItemsDetail() {
-        val cartRef = database.reference.child("user").child(userId).child("CartItems")
-
-        val flowerName = mutableListOf<String>()
-        val flowerPrice = mutableListOf<String>()
-        val flowerImage = mutableListOf<String>()
-        val flowerDescription = mutableListOf<String>()
-        val flowerIngredient = mutableListOf<String>()
-
-        val flowerQuantities = cartAdapter.getUpdatedItemsQuantities()
-
-        cartRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                for (flowerSnapshot in snapshot.children) {
-                    val item = flowerSnapshot.getValue(CartItems::class.java)
-                    item?.flowerName?.let { flowerName.add(it) }
-                    item?.flowerPrice?.let { flowerPrice.add(it) }
-                    item?.flowerImage?.let { flowerImage.add(it) }
-                    item?.flowerDescription?.let { flowerDescription.add(it) }
-                    item?.flowerIngredient?.let { flowerIngredient.add(it) }
-                }
-                orderNow(flowerName, flowerPrice, flowerDescription, flowerImage, flowerIngredient, flowerQuantities)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Đặt hàng thất bại, vui lòng thử lại", Toast.LENGTH_SHORT).show()
-            }
-        })
     }
 
     private fun orderNow(
@@ -138,7 +128,7 @@ class CartFragment : Fragment() {
             intent.putExtra("FlowerItemName", ArrayList(flowerName))
             intent.putExtra("FlowerItemPrice", ArrayList(flowerPrice))
             intent.putExtra("FlowerItemImage", ArrayList(flowerImage))
-            intent.putExtra("FlowerItemDesciption", ArrayList(flowerDescription))
+            intent.putExtra("FlowerItemDescription", ArrayList(flowerDescription))
             intent.putExtra("FlowerItemIngredient", ArrayList(flowerIngredients))
             intent.putExtra("FlowerItemQuantities", ArrayList(flowerQuantities))
             startActivity(intent)
