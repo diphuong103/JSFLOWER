@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
+    android:clipToPadding="false"
     tools:context=".Fragment.ProfileFragment">
 
     <ScrollView
@@ -11,22 +13,68 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/buttonContainer"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:paddingBottom="100dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
+            <!-- Header -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Thông tin cá nhân"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="16dp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp">
 
-            <!-- Họ và tên -->
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Thông tin cá nhân"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/editButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/edit"
+                    android:background="@android:color/transparent"
+                    android:contentDescription="Edit" />
+            </LinearLayout>
+
+            <!-- Avatar Section -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp">
+
+                <de.hdodenhof.circleimageview.CircleImageView
+                    android:id="@+id/profileAvatar"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_centerHorizontal="true"
+                    android:src="@drawable/default_avatar"
+                    app:civ_border_width="2dp"
+                    app:civ_border_color="#CCCCCC" />
+
+                <ImageButton
+                    android:id="@+id/editAvatarButton"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignRight="@id/profileAvatar"
+                    android:layout_alignBottom="@id/profileAvatar"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:background="@drawable/circle_background"
+                    android:src="@drawable/camera_icon"
+                    android:contentDescription="Edit avatar" />
+            </RelativeLayout>
+
+            <!-- Name -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -46,7 +94,8 @@
                 <EditText
                     android:id="@+id/etName"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
                     android:hint="Nhập họ và tên"
@@ -75,7 +124,8 @@
                 <EditText
                     android:id="@+id/etEmail"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
                     android:hint="Nhập email"
@@ -84,7 +134,7 @@
                     android:paddingEnd="8dp" />
             </LinearLayout>
 
-            <!-- Số điện thoại -->
+            <!-- Phone -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -104,7 +154,8 @@
                 <EditText
                     android:id="@+id/etPhone"
                     android:layout_width="0dp"
-                    android:layout_height="56dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="48dp"
                     android:layout_weight="1"
                     android:background="@android:color/transparent"
                     android:hint="Nhập số điện thoại"
@@ -113,7 +164,7 @@
                     android:paddingEnd="8dp" />
             </LinearLayout>
 
-            <!-- Địa chỉ -->
+            <!-- Address -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -162,5 +213,4 @@
             android:text="Lưu thông tin"
             android:textColor="@android:color/white" />
     </FrameLayout>
-
 </RelativeLayout>

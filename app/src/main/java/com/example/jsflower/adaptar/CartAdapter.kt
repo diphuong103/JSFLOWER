@@ -233,4 +233,10 @@ class CartAdapter(
             }
         })
     }
+
+    fun getUpdatedItemsQuantities(): MutableList<Int> {
+        val itemQuantity = mutableListOf<Int>()
+        itemQuantity.addAll(cartQuantity)
+        return itemQuantity
+    }
 }

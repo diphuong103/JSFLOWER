@@ -24,12 +24,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Chỉnh sửa"
+        android:text="Thanh toán"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+
+    <ImageButton
+        android:id="@+id/btnEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/edit"
+        android:contentDescription="Edit button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tvTitle"
+        app:layout_constraintBottom_toBottomOf="@+id/tvTitle" />
 
     <LinearLayout
         android:id="@+id/layoutName"
@@ -200,7 +212,7 @@
             android:inputType="numberDecimal"
             android:paddingStart="8dp"
             android:paddingEnd="16dp"
-            android:hint="Nhập số tiền" />
+            android:hint="0" />
     </LinearLayout>
 
     <Button
@@ -210,8 +222,9 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="32dp"
-        android:text="Lưu thay đổi"
+        android:text="Xác nhận đặt hàng"
         android:textColor="@android:color/white"
+        android:background="@drawable/proceedbutonshape"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
