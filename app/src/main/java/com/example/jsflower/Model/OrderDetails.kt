@@ -2,9 +2,10 @@ package com.example.jsflower.Model
 
 import android.os.Parcel
 import android.os.Parcelable
+import java.io.Serializable
 import java.util.ArrayList
 
-class OrderDetails() : Parcelable {
+class OrderDetails() : Serializable {
     var userUid: String? = null
     var userName: String? = null  // Changed to String to match constructor parameter
     var flowerNames: ArrayList<String>? = null
@@ -74,7 +75,7 @@ class OrderDetails() : Parcelable {
         currentTime = parcel.readLong()
     }
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
+    fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(userUid)
         parcel.writeString(userName)
         flowerNames?.let { parcel.writeStringList(it) }
@@ -90,7 +91,7 @@ class OrderDetails() : Parcelable {
         parcel.writeLong(currentTime)
     }
 
-    override fun describeContents(): Int {
+    fun describeContents(): Int {
         return 0
     }
 
