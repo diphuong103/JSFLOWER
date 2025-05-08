@@ -1,13 +1,18 @@
 package com.example.jsflower
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
+import android.text.method.PasswordTransformationMethod
 import android.util.Log
 import android.util.Patterns
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.jsflower.Model.UserModel
 import com.example.jsflower.databinding.ActivitySignBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -27,6 +32,7 @@ class SignActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
     private lateinit var googleSignInClient: GoogleSignInClient
 
+    private var isPasswordVisible = false
     private val binding: ActivitySignBinding by lazy {
         ActivitySignBinding.inflate(layoutInflater)
     }
@@ -34,6 +40,8 @@ class SignActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        setupPasswordVisibilityToggle()
 
         // Cấu hình Google Sign-In
         val googleSignInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -159,4 +167,49 @@ class SignActivity : AppCompatActivity() {
             Toast.makeText(this, "Đã huỷ chọn tài khoản Google", Toast.LENGTH_SHORT).show()
         }
     }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupPasswordVisibilityToggle() {
+        val editText = binding.editTextTextPassword2
+
+        editText.setOnTouchListener { _, event ->
+            val drawableEnd = editText.compoundDrawables[2] // drawableEnd
+            if (drawableEnd != null && event.action == MotionEvent.ACTION_UP) {
+                val drawableWidth = drawableEnd.bounds.width()
+                val extraPadding = editText.paddingEnd // Include paddingEnd
+
+                if (event.rawX >= (editText.right - drawableWidth - extraPadding)) {
+                    isPasswordVisible = !isPasswordVisible
+
+                    if (isPasswordVisible) {
+                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        editText.transformationMethod = null
+                        editText.setCompoundDrawablesWithIntrinsicBounds(
+                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            null,
+                            ContextCompat.getDrawable(this, R.drawable.eye),
+                            null
+                        )
+                    } else {
+                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                        editText.transformationMethod = PasswordTransformationMethod.getInstance()
+                        editText.setCompoundDrawablesWithIntrinsicBounds(
+                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            null,
+                            ContextCompat.getDrawable(this, R.drawable.eye_hide),
+                            null
+                        )
+                    }
+
+                    editText.setSelection(editText.text.length)
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        }
+    }
+
 }

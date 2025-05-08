@@ -9,4 +9,19 @@
     <color name="endcolor">#880000</color>
     <color name="iconColor">#993C54</color>
 
+    <color name="primary_color">#FF3700B3</color>
+    <color name="primary_variant">#FF6200EE</color>
+    <color name="secondary_color">#FF03DAC5</color>
+    <color name="accent_color">#FFC107</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="background_color">#F9F9F9</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="divider_color">#EEEEEE</color>
+
+    <color name="selected_category_bg">#FF3700B3</color>
+    <color name="selected_category_text">#FFFFFF</color>
+    <color name="unselected_category_bg">#FFFFFF</color>
+    <color name="unselected_category_text">#333333</color>
+
 </resources>

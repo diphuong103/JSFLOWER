@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Bo góc -->
+    <corners android:radius="260dp" />
+
+    <!-- Màu nền -->
+    <solid android:color="#FFE0B2" /> <!-- Màu có thể thay đổi tùy theo chủ đề -->
+
+    <!-- Viền nếu cần -->
+    <!--
+    <stroke
+        android:width="1dp"
+        android:color="#FF9800" />
+    -->
+</shape>

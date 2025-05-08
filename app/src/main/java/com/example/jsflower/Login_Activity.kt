@@ -1,13 +1,18 @@
 package com.example.jsflower
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputType
+import android.text.method.PasswordTransformationMethod
 import android.util.Log
 import android.util.Patterns
+import android.view.MotionEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.jsflower.Model.UserModel
 import com.example.jsflower.databinding.ActivityLoginBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -26,6 +31,7 @@ class Login_Activity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
     private lateinit var googleSignInClient: GoogleSignInClient
+    private var isPasswordVisible = false
 
     private val binding: ActivityLoginBinding by lazy {
         ActivityLoginBinding.inflate(layoutInflater)
@@ -34,6 +40,8 @@ class Login_Activity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        setupPasswordVisibilityToggle()
 
         // Firebase Auth
         auth = FirebaseAuth.getInstance()
@@ -115,7 +123,8 @@ class Login_Activity : AppCompatActivity() {
 
                 auth.signInWithCredential(credential).addOnCompleteListener { authTask ->
                     if (authTask.isSuccessful) {
-                        Toast.makeText(this, "Đăng nhập Google thành công", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Đăng nhập Google thành công", Toast.LENGTH_SHORT)
+                            .show()
                         saveUserDataGG(auth.currentUser)
                         updateUi(auth.currentUser)
                     } else {
@@ -124,9 +133,55 @@ class Login_Activity : AppCompatActivity() {
                     }
                 }
             } catch (e: ApiException) {
-                Log.e("LoginActivity", "Google Sign-In thất bại: ${e.statusCode}", e)
-                Toast.makeText(this, "Lỗi đăng nhập Google", Toast.LENGTH_SHORT).show()
+                Log.e("LoginActivity", "Google Sign-In thất bại: ${e.statusCode} - ${e.message}")
+                Toast.makeText(this, "Lỗi Google Sign-In: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
+
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupPasswordVisibilityToggle() {
+        val editText = binding.editTextTextPassword
+
+        editText.setOnTouchListener { _, event ->
+            val drawableEnd = editText.compoundDrawables[2] // drawableEnd
+            if (drawableEnd != null && event.action == MotionEvent.ACTION_UP) {
+                val drawableWidth = drawableEnd.bounds.width()
+                val extraPadding = editText.paddingEnd // 👈 quan trọng: tính cả paddingEnd
+
+                if (event.rawX >= (editText.right - drawableWidth - extraPadding)) {
+                    isPasswordVisible = !isPasswordVisible
+
+                    if (isPasswordVisible) {
+                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        editText.transformationMethod = null
+                        editText.setCompoundDrawablesWithIntrinsicBounds(
+                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            null,
+                            ContextCompat.getDrawable(this, R.drawable.eye),
+                            null
+                        )
+                    } else {
+                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                        editText.transformationMethod = PasswordTransformationMethod.getInstance()
+                        editText.setCompoundDrawablesWithIntrinsicBounds(
+                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            null,
+                            ContextCompat.getDrawable(this, R.drawable.eye_hide),
+                            null
+                        )
+                    }
+
+                    editText.setSelection(editText.text.length)
+                    true
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        }
+    }
+
 }

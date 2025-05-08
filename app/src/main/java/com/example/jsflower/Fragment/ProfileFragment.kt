@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -11,6 +12,7 @@ import com.bumptech.glide.Glide
 import com.example.jsflower.ImgBB.FileUtils
 import com.example.jsflower.ImgBB.ImgBBApi
 import com.example.jsflower.ImgBB.ImgBBResponse
+import com.example.jsflower.Login_Activity
 import com.example.jsflower.R
 import com.example.jsflower.databinding.FragmentProfileBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -58,7 +60,11 @@ class ProfileFragment : Fragment() {
                 isEditing = true
                 setEditTextsEnabled(true)
                 binding.editAvatarButton.visibility = View.VISIBLE
-                Toast.makeText(requireContext(), "Bạn có thể chỉnh sửa thông tin", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Bạn có thể chỉnh sửa thông tin",
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
                 saveUserData()
             }
@@ -66,7 +72,11 @@ class ProfileFragment : Fragment() {
 
         binding.btnSaveProfile.setOnClickListener {
             if (isEditing) saveUserData()
-            else Toast.makeText(requireContext(), "Nhấn nút chỉnh sửa để thay đổi thông tin", Toast.LENGTH_SHORT).show()
+            else Toast.makeText(
+                requireContext(),
+                "Nhấn nút chỉnh sửa để thay đổi thông tin",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         binding.editAvatarButton.setOnClickListener {
@@ -75,6 +85,14 @@ class ProfileFragment : Fragment() {
             }
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
         }
+
+        binding.logOut.setOnClickListener {
+            auth.signOut()
+            val intent = Intent(requireContext(), Login_Activity::class.java)
+            startActivity(intent)
+            requireActivity().finish()
+        }
+
 
         return binding.root
     }
@@ -101,11 +119,25 @@ class ProfileFragment : Fragment() {
                     binding.etName.setText(name)
                     binding.etPhone.setText(phone)
                     binding.etAddress.setText(address)
+                    binding.etAddress.invalidate()
+                    binding.etAddress.visibility = View.VISIBLE
+
+                    requireActivity().runOnUiThread {
+                        binding.etAddress.setText(address)
+                    }
+
+
+                    Log.d("ProfileFragment", "Address: $address")
+                    Log.d("ProfileFragment", "Address: $name")
+                    Log.d("ProfileFragment", "Address: $phone")
+
                     binding.etEmail.setText(email)
 
                     if (imageUri.isNotEmpty()) {
                         Glide.with(requireContext()).load(imageUri).into(binding.profileAvatar)
                     }
+
+                    setEditTextsEnabled(false)
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -122,7 +154,8 @@ class ProfileFragment : Fragment() {
         val address = binding.etAddress.text.toString().trim()
 
         if (name.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT)
+                .show()
             return
         }
 
@@ -139,7 +172,8 @@ class ProfileFragment : Fragment() {
 
             database.child("user").child(userId).updateChildren(userMap)
                 .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Cập nhật thành công", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Cập nhật thành công", Toast.LENGTH_SHORT)
+                        .show()
                     setEditTextsEnabled(false)
                     isEditing = false
                     binding.editButton.setImageResource(R.drawable.edit)
@@ -151,6 +185,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -160,17 +195,14 @@ class ProfileFragment : Fragment() {
                 selectedImageUri = uri
                 binding.profileAvatar.setImageURI(uri)
             } else {
-                Toast.makeText(requireContext(), "Không thể lấy ảnh đã chọn", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Không thể lấy ảnh đã chọn", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
 
     private fun uploadImageWithRetrofit(uri: Uri) {
         val filePath = FileUtils.getPath(requireContext(), uri)
-        if (filePath == null) {
-            Toast.makeText(requireContext(), "Không thể lấy đường dẫn ảnh", Toast.LENGTH_SHORT).show()
-            return
-        }
 
         val file = File(filePath)
         val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
@@ -194,7 +226,11 @@ class ProfileFragment : Fragment() {
             }
 
             override fun onFailure(call: Call<ImgBBResponse>, t: Throwable) {
-                Toast.makeText(requireContext(), "Upload thất bại: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Upload thất bại: ${t.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
     }
@@ -217,7 +253,11 @@ class ProfileFragment : Fragment() {
 
         database.child("user").child(userId).updateChildren(userMap)
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Cập nhật thông tin và ảnh đại diện thành công", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Cập nhật thông tin và ảnh đại diện thành công",
+                    Toast.LENGTH_SHORT
+                ).show()
                 setEditTextsEnabled(false)
                 isEditing = false
                 binding.editButton.setImageResource(R.drawable.edit)
