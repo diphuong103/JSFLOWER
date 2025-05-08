@@ -7,16 +7,16 @@ import java.util.ArrayList
 
 class OrderDetails() : Serializable {
     var userUid: String? = null
-    var userName: String? = null  // Changed to String to match constructor parameter
+    var userName: String? = null
     var flowerNames: ArrayList<String>? = null
     var flowerPrices: ArrayList<String>? = null
     var flowerImages: ArrayList<String>? = null
-    var flowerQuantities: ArrayList<Int>? = null  // Changed to ArrayList<Int> to match constructor
+    var flowerQuantities: ArrayList<Int>? = null
     var address: String? = null
-    var totalPrice: Double? = null  // Changed to Double to match constructor parameter
+    var totalPrice: Double? = null
     var phoneNumber: String? = null
     var orderAccepted: Boolean = false
-    var paymentReceived: Boolean = false  // Fixed typo in variable name
+    var paymentReceived: Boolean = false
     var itemPushKey: String? = null
     var currentTime: Long = 0
 

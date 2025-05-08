@@ -1,6 +1,7 @@
 package com.example.jsflower.Fragment
 
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -41,7 +42,19 @@ class HistoryFragment : Fragment() {
             seeItemsRecentBuy()
         }
 
+        binding.receivedButton.setOnClickListener {
+            updateOrderStatus()
+
+        }
+
+
         return binding.root
+    }
+
+    private fun updateOrderStatus() {
+        val itemPushKey = listOfOrderItem[0].itemPushKey
+        val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey!!)
+        completeOrderRef.child("paymentReceived").setValue(true)
     }
 
     private fun seeItemsRecentBuy() {
@@ -65,6 +78,14 @@ class HistoryFragment : Fragment() {
                 val image = it.flowerImages?.firstOrNull() ?: ""
                 val uri = Uri.parse(image)
                 Glide.with(requireContext()).load(uri).into(buyAgainFlowerImage)
+
+                val isOrderIsAccepted = listOfOrderItem[0].orderAccepted
+                if(isOrderIsAccepted)
+                {
+                    statusCircle.background.setTint(Color.GREEN)
+                    receivedButton.visibility = View.VISIBLE
+
+                }
             }
         }
     }
