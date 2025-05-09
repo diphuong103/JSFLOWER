@@ -49,7 +49,6 @@ class CartFragment : Fragment() {
         binding.proceedButton.setOnClickListener {
             if (::cartAdapter.isInitialized && flowerNames.isNotEmpty()) {
                 val flowerQuantities = cartAdapter.getUpdatedItemsQuantities()
-
                 orderNow(
                     flowerNames,
                     flowerPrices,
@@ -64,6 +63,12 @@ class CartFragment : Fragment() {
         }
 
         return binding.root
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Cập nhật lại dữ liệu giỏ hàng mỗi khi Fragment hiển thị
+        refreshCartData()
     }
 
     private fun getCartItems() {
@@ -138,4 +143,25 @@ class CartFragment : Fragment() {
             startActivity(intent)
         }
     }
+
+    // Phương thức làm mới dữ liệu giỏ hàng
+    private fun refreshCartData() {
+        if (auth.currentUser == null) {
+            Toast.makeText(context, "Vui lòng đăng nhập để xem giỏ hàng", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+
+        // Xóa dữ liệu cũ
+        flowerNames.clear()
+        flowerPrices.clear()
+        flowerDescriptions.clear()
+        flowerImagesUri.clear()
+        flowerIngredients.clear()
+        quantity.clear()
+
+        // Lấy dữ liệu mới
+        getCartItems()
+    }
+
 }

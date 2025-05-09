@@ -5,16 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.jsflower.Fragment.CartFragment
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.MenuItem
@@ -105,15 +99,6 @@ class DetailsActivity : AppCompatActivity() {
         binding.addToCartButton.setOnClickListener {
             addItemToCart()
         }
-
-        binding.buyNowButton.setOnClickListener {
-            addItemToCart()
-
-            val intent = Intent(this@DetailsActivity, CartActivity::class.java)
-            startActivity(intent)
-        }
-
-
 
         // Initialize review adapter and RecyclerView
         reviewsList = mutableListOf()

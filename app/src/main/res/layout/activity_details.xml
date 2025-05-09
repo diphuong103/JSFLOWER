@@ -69,45 +69,31 @@
             app:layout_constraintTop_toBottomOf="@+id/detailFlowerName" />
 
         <!-- Buttons for Buy and Add to Cart -->
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/buyNowButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
-            android:background="@drawable/addtocardshape"
-            android:text="Mua ngay"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@+id/addToCartButton"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="@+id/priceTextView"
-            app:layout_constraintTop_toBottomOf="@+id/priceTextView" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/addToCartButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginEnd="32dp"
             android:background="@drawable/addtocardshape"
             android:text="Thêm vào giỏ hàng"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@+id/buyNowButton"
+            android:drawableEnd="@drawable/cart"
+            android:paddingEnd="5dp"
+            android:textSize="15sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/buyNowButton"
-            app:layout_constraintTop_toTopOf="@+id/buyNowButton" />
+            app:layout_constraintStart_toEndOf="@+id/imageView5"
+            app:layout_constraintTop_toTopOf="@+id/imageView5" />
 
         <TextView
             android:id="@+id/textView21"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="12dp"
             android:layout_marginTop="16dp"
             android:text="Miêu tả ngắn"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/buyNowButton" />
+            app:layout_constraintTop_toBottomOf="@+id/imageView5" />
 
         <TextView
             android:id="@+id/detailDescriptionTextView"
@@ -312,6 +298,14 @@
             app:layout_constraintStart_toEndOf="@+id/imageButton"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.484" />
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="187dp"
+            android:layout_height="45dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/priceTextView"
+            app:srcCompat="@drawable/hinh_do_trong" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
