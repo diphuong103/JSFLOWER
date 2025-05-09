@@ -11,11 +11,8 @@ import com.example.jsflower.DetailsActivity
 import com.example.jsflower.Model.MenuItem
 import com.example.jsflower.databinding.MenuItemBinding
 
-class MenuAdapter(
-    private val menuItems: List<MenuItem>,
-    private val requireContext: Context,
-
-    ) : RecyclerView.Adapter<MenuAdapter.MenuViewHolder>() {
+class MenuAdapter(private val menuItems: List<MenuItem>, private val context: Context) :
+    RecyclerView.Adapter<MenuAdapter.MenuViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuViewHolder {
         val binding = MenuItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -23,55 +20,40 @@ class MenuAdapter(
     }
 
     override fun onBindViewHolder(holder: MenuViewHolder, position: Int) {
-        holder.bind(menuItems[position])
+        val menuItem = menuItems[position]
+        holder.bind(menuItem)
+
+        // Set click listener for each item
+        holder.itemView.setOnClickListener {
+            val intent = Intent(context, DetailsActivity::class.java).apply {
+                putExtra("MenuItemName", menuItem.flowerName)
+                putExtra("MenuItemPrice", menuItem.flowerPrice)
+                putExtra("MenuItemImage", menuItem.flowerImage)
+                putExtra("MenuItemDescription", menuItem.flowerDescription)
+                putExtra("MenuItemIngredient", menuItem.flowerIngredient)
+                // IMPORTANT: Ensure we always pass the key
+                putExtra("MenuItemKey", menuItem.key)
+            }
+            context.startActivity(intent)
+        }
     }
-
-
 
     override fun getItemCount(): Int = menuItems.size
 
     inner class MenuViewHolder(private val binding: MenuItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        init {
-            binding.root.setOnClickListener {
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    // Gọi sự kiện từ interface
-                    openDetailsActivity(position)
-
-
-                }
-            }
-        }
-
-        private fun openDetailsActivity(position: Int) {
-            val menuItem = menuItems[position]
-
-            // a intent to open details activity and pass data
-            val intent = Intent(requireContext, DetailsActivity::class.java).apply {
-                putExtra("MenuItemName", menuItem.flowerName)
-                putExtra("MenuItemImage", menuItem.flowerImage)
-                putExtra("MenuItemDescription", menuItem.flowerDescription)
-                putExtra("MenuItemIngredient", menuItem.flowerIngredient)
-                putExtra("MenuItemPrice", menuItem.flowerPrice)
-            }
-
-            requireContext.startActivity(intent)
-
-        }
-
-
-        // set data in recyclerview items name, price, image
         fun bind(menuItem: MenuItem) {
-            binding.apply {
-                menuFlowerName.text = menuItem.flowerName
-                menuPrice.text = menuItem.flowerPrice
-                Glide.with(requireContext)
+            binding.menuFlowerName.text = menuItem.flowerName
+            binding.menuPrice.text = menuItem.flowerPrice
+
+            try {
+                Glide.with(context)
                     .load(Uri.parse(menuItem.flowerImage))
-                    .into(menuImage)
+                    .into(binding.menuImage)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
-
 }

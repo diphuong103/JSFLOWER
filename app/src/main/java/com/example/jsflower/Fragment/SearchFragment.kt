@@ -26,25 +26,95 @@ class SearchFragment : Fragment() {
 
         database = FirebaseDatabase.getInstance()
 
-        retrieveMenuItems()
+        // Start loading indicator
+        binding.searchProgressBar.visibility = View.VISIBLE
+
+        // Retrieve all menu items from all categories
+        retrieveAllMenuItems()
         setupSearchView()
 
         return binding.root
     }
 
-    private fun retrieveMenuItems() {
-        val flowerRef: DatabaseReference = database.reference.child("list")
+    private fun retrieveAllMenuItems() {
+        val categoryRef: DatabaseReference = database.reference.child("category")
 
+        // First get all categories
+        categoryRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // Track how many categories we've processed
+                val totalCategories = snapshot.childrenCount
+                var processedCategories = 0
+
+                if (totalCategories == 0L) {
+                    // No categories found
+                    binding.searchProgressBar.visibility = View.GONE
+                    binding.noResultsText.visibility = View.VISIBLE
+                    return
+                }
+
+                // For each category, get its menu items
+                for (categorySnapshot in snapshot.children) {
+                    val categoryId = categorySnapshot.key
+
+                    // Get menu items for this category
+                    val menuRef: DatabaseReference = database.reference.child("list").child(categoryId!!)
+
+                    menuRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(menuSnapshot: DataSnapshot) {
+                            for (itemSnapshot in menuSnapshot.children) {
+                                val menuItem = itemSnapshot.getValue(MenuItem::class.java)
+                                menuItem?.let {
+                                    // Add category information to menu item for better filtering
+                                    it.categoryId = categoryId
+                                    originalMenuItems.add(it)
+                                }
+                            }
+
+                            // Increment processed count
+                            processedCategories++
+
+                            // If all categories processed, show the menu
+                            if (processedCategories >= totalCategories) {
+                                binding.searchProgressBar.visibility = View.GONE
+                                showAllMenu()
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            processedCategories++
+                            if (processedCategories >= totalCategories) {
+                                binding.searchProgressBar.visibility = View.GONE
+                                showAllMenu()
+                            }
+                        }
+                    })
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                binding.searchProgressBar.visibility = View.GONE
+                binding.noResultsText.visibility = View.VISIBLE
+            }
+        })
+
+        // Also retrieve items from the "list" node for backward compatibility
+        val flowerRef: DatabaseReference = database.reference.child("list")
         flowerRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                originalMenuItems.clear()
                 for (flowerSnapshot in snapshot.children) {
                     val menuItem = flowerSnapshot.getValue(MenuItem::class.java)
                     menuItem?.let {
+                        // Add a special category marker
+                        it.categoryId = "list"
                         originalMenuItems.add(it)
                     }
                 }
-                showAllMenu()
+                // Update UI if we have items
+                if (originalMenuItems.isNotEmpty()) {
+                    binding.searchProgressBar.visibility = View.GONE
+                    showAllMenu()
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -54,7 +124,14 @@ class SearchFragment : Fragment() {
     }
 
     private fun showAllMenu() {
-        setAdapter(ArrayList(originalMenuItems))
+        if (originalMenuItems.isEmpty()) {
+            binding.noResultsText.visibility = View.VISIBLE
+            binding.menuRecyclerView.visibility = View.GONE
+        } else {
+            binding.noResultsText.visibility = View.GONE
+            binding.menuRecyclerView.visibility = View.VISIBLE
+            setAdapter(ArrayList(originalMenuItems))
+        }
     }
 
     private fun setAdapter(filteredMenuItems: ArrayList<MenuItem>) {
@@ -79,9 +156,26 @@ class SearchFragment : Fragment() {
     }
 
     private fun filterMenuItems(query: String?) {
-        val filteredItems = originalMenuItems.filter {
-            it.flowerName?.contains(query ?: "", ignoreCase = true) == true
+        if (query.isNullOrBlank()) {
+            // If query is empty, show all items
+            showAllMenu()
+            return
         }
-        setAdapter(ArrayList(filteredItems))
+
+        val filteredItems = originalMenuItems.filter { menuItem ->
+            // Search in flower name
+            (menuItem.flowerName?.contains(query, ignoreCase = true) == true) ||
+                    // Also search in description if available
+                    (menuItem.flowerDescription?.contains(query, ignoreCase = true) == true)
+        }
+
+        if (filteredItems.isEmpty()) {
+            binding.noResultsText.visibility = View.VISIBLE
+            binding.menuRecyclerView.visibility = View.GONE
+        } else {
+            binding.noResultsText.visibility = View.GONE
+            binding.menuRecyclerView.visibility = View.VISIBLE
+            setAdapter(ArrayList(filteredItems))
+        }
     }
 }

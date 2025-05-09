@@ -1,54 +1,69 @@
-package com.example.jsflower.adapter
+package com.example.jsflower.adaptar
 
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.jsflower.DetailsActivity
-import com.example.jsflower.databinding.PopulerItemBinding
+import com.example.jsflower.Model.MenuItem
+import com.example.jsflower.databinding.MenuItemBinding
 
-class PopularAdapter(private val items: List<String>, private val price: List<String>, private val image: List<Int>, private val requireContext: Context) : RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
+class PopularAdapter(private val popularItems: List<MenuItem>, private val context: Context) :
+    RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PopularViewHolder {
-        val binding = PopulerItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding = MenuItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PopularViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: PopularViewHolder, position: Int) {
-        val item = items[position]
-        val images = image[position]
-        val price = price[position]
-        holder.bind(item,price, images)
+        val menuItem = popularItems[position]
+        holder.bind(menuItem)
 
-        holder.itemView.setOnClickListener{
-            // Mở màn DetailsActivity
-            val intent = Intent(requireContext, DetailsActivity::class.java).apply {
-                putExtra("MenuItemName", item)
-                putExtra("MenuItemImage", images)
+        // Set click listener for each item
+        holder.itemView.setOnClickListener {
+            val intent = Intent(context, DetailsActivity::class.java).apply {
+                putExtra("MenuItemName", menuItem.flowerName)
+                putExtra("MenuItemPrice", menuItem.flowerPrice)
+                putExtra("MenuItemImage", menuItem.flowerImage)
+                putExtra("MenuItemDescription", menuItem.flowerDescription)
+                putExtra("MenuItemIngredient", menuItem.flowerIngredient)
+                putExtra("MenuItemKey", menuItem.key)
+
+                // In ra log để debug
+                println("DEBUG: Sending MenuItemKey from PopularAdapter: ${menuItem.key}")
             }
-            requireContext.startActivity(intent)
-
+            context.startActivity(intent)
         }
 
     }
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
+    override fun getItemCount(): Int = popularItems.size
 
-    class PopularViewHolder(val binding: PopulerItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class PopularViewHolder(private val binding: MenuItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
-        private val imagesView = binding.flowerImage
-        fun bind(item: String,price: String,  images: Int) {
-             binding.flowerName.text = item
-             binding.flowerPrice.text = price
-            imagesView.setImageResource(images)
+        fun bind(menuItem: MenuItem) {
+            binding.menuFlowerName.text = menuItem.flowerName
+            binding.menuPrice.text = menuItem.flowerPrice
+
+            try {
+                Glide.with(context)
+                    .load(Uri.parse(menuItem.flowerImage))
+                    .into(binding.menuImage)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
-    class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) : RecyclerView.ItemDecoration() {
+
+    class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) :
+        RecyclerView.ItemDecoration() {
         override fun getItemOffsets(
             outRect: Rect,
             view: View,
@@ -65,6 +80,4 @@ class PopularAdapter(private val items: List<String>, private val price: List<St
             }
         }
     }
-
-
 }

@@ -76,7 +76,8 @@ dependencies {
     implementation(libs.glide)
 
     implementation (libs.circleimageview)
-
+    implementation (libs.facebook.android.sdk)
+    implementation (libs.facebook.login.v1803)
 
 
 

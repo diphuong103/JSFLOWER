@@ -21,4 +21,11 @@
     <string name="ch_n_a_i_m">Chọn địa điểm</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="facebook_app_id">1223452509442465</string>
+    <string name="fb_login_protocol_scheme">fb1223452509442465</string>
+    <string name="facebook_client_token">37ee7a70b46d73faabebfd92e70190b2</string>
+
+
 </resources>

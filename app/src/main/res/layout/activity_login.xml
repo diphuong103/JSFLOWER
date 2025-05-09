@@ -99,28 +99,39 @@
         android:id="@+id/googleButton2"
         android:layout_width="152dp"
         android:layout_height="50dp"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/whitebutton"
         android:drawableStart="@drawable/google_svgrepo_com"
         android:paddingStart="15dp"
         android:text="@string/google"
-        app:layout_constraintEnd_toStartOf="@+id/button3"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView8"
         tools:ignore="RtlSymmetry" />
 
+    <com.facebook.login.widget.LoginButton
+        android:id="@+id/fb_login_hidden"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        tools:ignore="MissingConstraints" />
+
+
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button3"
+        android:id="@+id/custom_fb_button"
         android:layout_width="152dp"
-        android:layout_height="50dp"
+        android:layout_height="52dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/whitebutton"
         android:drawableStart="@drawable/facebook_3_logo_svgrepo_com__1_"
+        android:drawablePadding="15dp"
+        android:fontFamily="sans-serif"
         android:paddingStart="15dp"
         android:text="@string/facebook"
+        android:textColor="@color/black"
+        android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_bias="0.67"
         app:layout_constraintStart_toEndOf="@+id/googleButton2"
         app:layout_constraintTop_toBottomOf="@+id/textView8"
         tools:ignore="RtlSymmetry" />

@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.interfaces.ItemClickListener
@@ -17,7 +17,7 @@ import com.example.jsflower.Model.MenuItem
 import com.example.jsflower.R
 import com.example.jsflower.adaptar.CategoryAdapter
 import com.example.jsflower.adaptar.MenuAdapter
-import com.example.jsflower.adapter.PopularAdapter
+import com.example.jsflower.adaptar.PopularAdapter
 import com.example.jsflower.databinding.FragmentHomeBinding
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -57,6 +57,7 @@ class HomeFragment : Fragment() {
 
         // Lay du lieu categories tu database
         setupCategoriesRecyclerView()
+        setupPopularProducts()
 
         return binding.root
 
@@ -83,7 +84,11 @@ class HomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Không thể tải dữ liệu sản phẩm: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Không thể tải dữ liệu sản phẩm: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
     }
@@ -100,7 +105,7 @@ class HomeFragment : Fragment() {
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
         val adapter = MenuAdapter(subsetMenuItems, requireContext())
-        binding.popularRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.popularRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.popularRecyclerView.adapter = adapter
     }
 
@@ -139,18 +144,26 @@ class HomeFragment : Fragment() {
 
     private fun setupCategoriesRecyclerView() {
         categoryList = ArrayList<CategoryModel>()
-        binding.categoriesRecyclerView.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        binding.categoriesRecyclerView.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
         // Thiết lập adapter ban đầu với danh sách trống
-        val adapter = CategoryAdapter(requireContext(), categoryList, object : CategoryAdapter.OnCategoryClickListener {
-            override fun onCategoryClick(category: CategoryModel, position: Int) {
-                // Xử lý khi người dùng nhấp vào một thể loại
-                Toast.makeText(requireContext(), "Đã chọn: ${category.name}", Toast.LENGTH_SHORT).show()
+        val adapter = CategoryAdapter(
+            requireContext(),
+            categoryList,
+            object : CategoryAdapter.OnCategoryClickListener {
+                override fun onCategoryClick(category: CategoryModel, position: Int) {
+                    // Xử lý khi người dùng nhấp vào một thể loại
+                    Toast.makeText(
+                        requireContext(),
+                        "Đã chọn: ${category.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                // Tải danh sách sản phẩm của thể loại đã chọn
-                loadCategoryProducts(category)
-            }
-        })
+                    // Tải danh sách sản phẩm của thể loại đã chọn
+                    loadCategoryProducts(category)
+                }
+            })
         binding.categoriesRecyclerView.adapter = adapter
 
         // Tải dữ liệu danh mục từ Firebase
@@ -166,15 +179,19 @@ class HomeFragment : Fragment() {
 
                 for (categorySnapshot in snapshot.children) {
                     val categoryId = categorySnapshot.key ?: ""
-                    val categoryName = categorySnapshot.child("categoryName").getValue(String::class.java) ?: ""
-                    val categoryImage = categorySnapshot.child("categoryImage").getValue(String::class.java) ?: ""
+                    val categoryName =
+                        categorySnapshot.child("categoryName").getValue(String::class.java) ?: ""
+                    val categoryImage =
+                        categorySnapshot.child("categoryImage").getValue(String::class.java) ?: ""
 
                     val category = CategoryModel(categoryId, categoryName, categoryImage)
                     categoryList.add(category)
                 }
 
                 // Cập nhật adapter với dữ liệu mới
-                (binding.categoriesRecyclerView.adapter as CategoryAdapter).updateCategories(categoryList)
+                (binding.categoriesRecyclerView.adapter as CategoryAdapter).updateCategories(
+                    categoryList
+                )
 
                 // Nếu có ít nhất một danh mục, tải sản phẩm của danh mục đầu tiên
                 if (categoryList.isNotEmpty()) {
@@ -183,7 +200,11 @@ class HomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Không thể tải dữ liệu danh mục: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Không thể tải dữ liệu danh mục: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
     }
@@ -193,7 +214,8 @@ class HomeFragment : Fragment() {
         binding.categoryProductsHeader.text = "Sản phẩm ${category.name}"
 
         // Tải sản phẩm theo category.id từ database
-        val categoryProductsRef = database.reference.child("category").child(category.id).child("products")
+        val categoryProductsRef =
+            database.reference.child("category").child(category.id).child("products")
 
         categoryProductsRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -213,30 +235,67 @@ class HomeFragment : Fragment() {
                     val productId = productSnapshot.key ?: continue
 
                     // Lấy chi tiết sản phẩm từ danh sách sản phẩm
-                    database.reference.child("list").child(productId).addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(productDataSnapshot: DataSnapshot) {
-                            val menuItem = productDataSnapshot.getValue(MenuItem::class.java)
-                            menuItem?.let {
-                                categoryProducts.add(it)
+                    database.reference.child("list").child(productId)
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(productDataSnapshot: DataSnapshot) {
+                                val menuItem = productDataSnapshot.getValue(MenuItem::class.java)
+                                menuItem?.let {
+                                    categoryProducts.add(it)
+                                }
+
+                                loadedProducts++
+
+                                // Khi đã tải tất cả sản phẩm, cập nhật RecyclerView
+                                if (loadedProducts.toLong() == totalProducts) {
+                                    setProductItemAdapter(categoryProducts)
+                                }
                             }
 
-                            loadedProducts++
-
-                            // Khi đã tải tất cả sản phẩm, cập nhật RecyclerView
-                            if (loadedProducts.toLong() == totalProducts) {
-                                setProductItemAdapter(categoryProducts)
+                            override fun onCancelled(error: DatabaseError) {
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Không thể tải chi tiết sản phẩm: ${error.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            Toast.makeText(requireContext(), "Không thể tải chi tiết sản phẩm: ${error.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    })
+                        })
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Không thể tải sản phẩm theo danh mục: ${error.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Không thể tải sản phẩm theo danh mục: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+
+        })
+    }
+
+    private fun setupPopularProducts() {
+        val flowerRef = database.reference.child("list")
+        flowerRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val items = mutableListOf<MenuItem>()
+                for (flowerSnapshot in snapshot.children) {
+                    val menuItem = flowerSnapshot.getValue(MenuItem::class.java)
+                    menuItem?.let {
+                        // ĐẢM BẢO key được gán đúng
+                        it.key = flowerSnapshot.key ?: ""
+                        items.add(it)
+                    }
+                }
+
+                // Lọc và hiển thị các mục phổ biến
+                val popularItems = items.shuffled().take(6)
+                val adapter = PopularAdapter(popularItems, requireContext())
+                binding.popularRecyclerView.adapter = adapter
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Xử lý lỗi
             }
         })
     }

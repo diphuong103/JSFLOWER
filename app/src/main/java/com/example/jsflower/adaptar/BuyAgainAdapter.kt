@@ -12,7 +12,8 @@ class BuyAgainAdapter(
     private val buyAgainFlowerName: List<String>,
     private val buyAgainFlowerPrice: List<String>,
     private val buyAgainFlowerImage: List<String>,
-    private val context: Context
+    private val context: Context,
+    private val onBuyAgainClick: (String) -> Unit
 ) : RecyclerView.Adapter<BuyAgainAdapter.BuyAgainViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BuyAgainViewHolder {
@@ -38,6 +39,10 @@ class BuyAgainAdapter(
             binding.buyAgainFlowerPrice.text = flowerPrice
             val uri = Uri.parse(flowerImage)
             Glide.with(context).load(uri).into(binding.buyAgainFlowerImage)
+
+            binding.buyAgainFlowerButton.setOnClickListener {
+                onBuyAgainClick(flowerName)
+            }
         }
     }
 }

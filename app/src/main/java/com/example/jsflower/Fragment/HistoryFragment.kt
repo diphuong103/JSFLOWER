@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.jsflower.CartActivity
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.OrderDetails
 import com.example.jsflower.RecentOrderItems
@@ -46,7 +47,7 @@ class HistoryFragment : Fragment() {
         // Thiết lập listener cho lịch sử mua hàng
         setupBuyHistoryListener()
 
-        binding.rencenBuyItem.setOnClickListener{
+        binding.rencenBuyItem.setOnClickListener {
             seeItemsRecentBuy()
         }
 
@@ -100,8 +101,10 @@ class HistoryFragment : Fragment() {
 
                 orderStatusListener = object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val isReceived = snapshot.child("paymentReceived").getValue(Boolean::class.java) ?: false
-                        val isAccepted = snapshot.child("orderAccepted").getValue(Boolean::class.java) ?: false
+                        val isReceived =
+                            snapshot.child("paymentReceived").getValue(Boolean::class.java) ?: false
+                        val isAccepted =
+                            snapshot.child("orderAccepted").getValue(Boolean::class.java) ?: false
 
                         with(binding) {
                             if (isAccepted) {
@@ -167,17 +170,37 @@ class HistoryFragment : Fragment() {
     }
 
     // Thêm sản phẩm vào giỏ hàng khi người dùng nhấn "Mua lại"
-    private fun buyAgain(cartItem: CartItems) {
-        val userId = auth.currentUser?.uid ?: ""
-        val cartItemRef = database.getReference("user/$userId/CartItems")
+    private fun buyAgain(flowerName: String) {
+        // Tìm thông tin sản phẩm từ lịch sử mua hàng
+        for (order in listOfOrderItem) {
+            val index = order.flowerNames?.indexOf(flowerName) ?: -1
+            if (index != -1) {
+                // Lấy thông tin từ đơn hàng cũ
+                val cartItem = CartItems(
+                    flowerName = flowerName,
+                    flowerPrice = order.flowerPrices?.get(index) ?: "",
+                    flowerImage = order.flowerImages?.get(index) ?: "",
+                    flowerQuantity = 1,
+                    flowerDescription = "",
+                    flowerIngredient = ""
+                )
 
-        cartItemRef.push().setValue(cartItem)
-            .addOnSuccessListener {
-                Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
+                // Thêm vào giỏ hàng
+                val userId = auth.currentUser?.uid ?: ""
+                val cartItemRef = database.getReference("user/$userId/CartItems")
+
+                cartItemRef.push().setValue(cartItem)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
+                    }
+
+                // Dừng vòng lặp sau khi tìm thấy và xử lý
+                break
             }
-            .addOnFailureListener {
-                Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
-            }
+        }
     }
 
     private fun setPreviousBuyItemsRecyclerView() {
@@ -199,7 +222,15 @@ class HistoryFragment : Fragment() {
 
         val rv = binding.buyAgainRecyclerView
         rv.layoutManager = LinearLayoutManager(requireContext())
-        buyAgainAdapter = BuyAgainAdapter(buyAgainFlowerName, buyAgainFlowerPrice, buyAgainFlowerImage, requireContext())
+        buyAgainAdapter = BuyAgainAdapter(
+            buyAgainFlowerName,
+            buyAgainFlowerPrice,
+            buyAgainFlowerImage,
+            requireContext(),
+            onBuyAgainClick = { flowerName ->
+                buyAgain(flowerName)
+            }
+        )
         rv.adapter = buyAgainAdapter
     }
 
@@ -215,7 +246,8 @@ class HistoryFragment : Fragment() {
             if (listOfOrderItem.isNotEmpty()) {
                 val itemPushKey = listOfOrderItem[0].itemPushKey
                 if (itemPushKey != null) {
-                    val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
+                    val completeOrderRef =
+                        database.reference.child("CompletedOrder").child(itemPushKey)
                     if (::orderStatusListener.isInitialized) {
                         completeOrderRef.removeEventListener(orderStatusListener)
                     }

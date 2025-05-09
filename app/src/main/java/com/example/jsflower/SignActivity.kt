@@ -106,7 +106,7 @@ class SignActivity : AppCompatActivity() {
     }
 
     private fun saveUserData(username: String, email: String) {
-        val user = UserModel(username, email) // KHÔNG lưu password
+        val user = UserModel(username, email) 
         val userId = auth.currentUser!!.uid
         database.child("user").child(userId).setValue(user)
             .addOnSuccessListener {

@@ -15,10 +15,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.example.jsflower.Model.UserModel
 import com.example.jsflower.databinding.ActivityLoginBinding
+import com.facebook.AccessToken
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -27,7 +34,8 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
 class Login_Activity : AppCompatActivity() {
-
+    private val TAG = "FacebookLogin"
+    private lateinit var callbackManager: CallbackManager
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
     private lateinit var googleSignInClient: GoogleSignInClient
@@ -46,6 +54,9 @@ class Login_Activity : AppCompatActivity() {
         // Firebase Auth
         auth = FirebaseAuth.getInstance()
         database = Firebase.database.reference
+
+        // Initialize Facebook Callback Manager
+        callbackManager = CallbackManager.Factory.create()
 
         // Cấu hình Google Sign-In
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -69,6 +80,35 @@ class Login_Activity : AppCompatActivity() {
             }
         }
 
+        // Đăng nhập bằng Facebook
+        binding.customFbButton.setOnClickListener {
+            LoginManager.getInstance().logInWithReadPermissions(
+                this,
+                listOf("email", "public_profile")
+            )
+        }
+
+        // Đăng ký callback cho Facebook Login
+        LoginManager.getInstance().registerCallback(
+            callbackManager,
+            object : FacebookCallback<LoginResult> {
+                override fun onSuccess(loginResult: LoginResult) {
+                    Log.d(TAG, "facebook:onSuccess:$loginResult")
+                    handleFacebookAccessToken(loginResult.accessToken)
+                }
+
+                override fun onCancel() {
+                    Log.d(TAG, "facebook:onCancel")
+                    Toast.makeText(this@Login_Activity, "Đăng nhập Facebook bị hủy", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Log.d(TAG, "facebook:onError", error)
+                    Toast.makeText(this@Login_Activity, "Lỗi đăng nhập Facebook: ${error.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
+
         // Chuyển sang trang đăng ký
         binding.donthavebutton.setOnClickListener {
             startActivity(Intent(this, SignActivity::class.java))
@@ -81,6 +121,27 @@ class Login_Activity : AppCompatActivity() {
                 launcher.launch(signInIntent)
             }
         }
+    }
+
+    private fun handleFacebookAccessToken(token: AccessToken) {
+        Log.d(TAG, "handleFacebookAccessToken:$token")
+
+        val credential = FacebookAuthProvider.getCredential(token.token)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    // Sign in success, update UI with the signed-in user's information
+                    Log.d(TAG, "signInWithCredential:success")
+                    val user = auth.currentUser
+                    saveUserDataFB(user)
+                    updateUi(user)
+                } else {
+                    // If sign in fails, display a message to the user.
+                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Toast.makeText(this, "Xác thực Facebook thất bại.",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
     }
 
     private fun loginWithEmail(email: String, password: String) {
@@ -105,6 +166,17 @@ class Login_Activity : AppCompatActivity() {
         database.child("user").child(uid).setValue(userModel)
             .addOnSuccessListener { Log.d("Firebase", "Lưu user Google thành công") }
             .addOnFailureListener { Log.e("Firebase", "Lỗi lưu user Google", it) }
+    }
+
+    private fun saveUserDataFB(user: FirebaseUser?) {
+        val name = user?.displayName ?: "Tên Facebook"
+        val email = user?.email ?: "Không có email"
+        val uid = user?.uid ?: return
+        val userModel = UserModel(name, email)
+
+        database.child("user").child(uid).setValue(userModel)
+            .addOnSuccessListener { Log.d("Firebase", "Lưu user Facebook thành công") }
+            .addOnFailureListener { Log.e("Firebase", "Lỗi lưu user Facebook", it) }
     }
 
     private fun updateUi(user: FirebaseUser?) {
@@ -139,16 +211,15 @@ class Login_Activity : AppCompatActivity() {
         }
     }
 
-
     @SuppressLint("ClickableViewAccessibility")
     private fun setupPasswordVisibilityToggle() {
         val editText = binding.editTextTextPassword
 
         editText.setOnTouchListener { _, event ->
-            val drawableEnd = editText.compoundDrawables[2] // drawableEnd
+            val drawableEnd = editText.compoundDrawables[2]
             if (drawableEnd != null && event.action == MotionEvent.ACTION_UP) {
                 val drawableWidth = drawableEnd.bounds.width()
-                val extraPadding = editText.paddingEnd // 👈 quan trọng: tính cả paddingEnd
+                val extraPadding = editText.paddingEnd
 
                 if (event.rawX >= (editText.right - drawableWidth - extraPadding)) {
                     isPasswordVisible = !isPasswordVisible
@@ -184,4 +255,11 @@ class Login_Activity : AppCompatActivity() {
         }
     }
 
+    // Handle activity result for Facebook login
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // Pass the activity result back to the Facebook SDK
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
 }

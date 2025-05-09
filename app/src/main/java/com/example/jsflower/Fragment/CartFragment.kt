@@ -42,6 +42,10 @@ class CartFragment : Fragment() {
 
         getCartItems()
 
+        binding.btnBack.setOnClickListener {
+            activity?.onBackPressed()
+        }
+
         binding.proceedButton.setOnClickListener {
             if (::cartAdapter.isInitialized && flowerNames.isNotEmpty()) {
                 val flowerQuantities = cartAdapter.getUpdatedItemsQuantities()
