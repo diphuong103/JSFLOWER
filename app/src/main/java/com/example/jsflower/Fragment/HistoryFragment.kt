@@ -4,14 +4,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.example.jsflower.CartActivity
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.OrderDetails
 import com.example.jsflower.RecentOrderItems
@@ -24,13 +23,11 @@ import java.io.Serializable
 class HistoryFragment : Fragment() {
     private lateinit var binding: FragmentHistoryBinding
     private lateinit var buyAgainAdapter: BuyAgainAdapter
-
     private lateinit var database: FirebaseDatabase
     private lateinit var auth: FirebaseAuth
     private lateinit var userId: String
     private var listOfOrderItem: MutableList<OrderDetails> = mutableListOf()
 
-    // Khai báo ValueEventListener để có thể hủy đăng ký khi cần
     private lateinit var buyHistoryListener: ValueEventListener
     private lateinit var orderStatusListener: ValueEventListener
 
@@ -44,7 +41,6 @@ class HistoryFragment : Fragment() {
         database = FirebaseDatabase.getInstance()
         userId = auth.currentUser?.uid ?: ""
 
-        // Thiết lập listener cho lịch sử mua hàng
         setupBuyHistoryListener()
 
         binding.rencenBuyItem.setOnClickListener {
@@ -55,13 +51,40 @@ class HistoryFragment : Fragment() {
             updateOrderStatus()
         }
 
+        binding.cancelOrderButton.setOnClickListener {
+            val canceledOrder = listOfOrderItem[0]
+            val itemPushKey = canceledOrder.itemPushKey ?: return@setOnClickListener
+
+            val orderRef = database.reference.child("OrderDetails").child(itemPushKey)
+            val historyRef = database.reference.child("user").child(userId).child("BuyHistory")
+                .child(itemPushKey)
+            val cancelRef = database.reference.child("CanceledOrder").child(itemPushKey)
+
+            cancelRef.setValue(canceledOrder)
+                .addOnSuccessListener {
+                    orderRef.removeValue()
+                    historyRef.removeValue()
+                    binding.statusCircle.background.setTint(Color.RED)
+                    Toast.makeText(
+                        requireContext(),
+                        "Đơn hàng đã được hủy và lưu lịch sử",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(
+                        requireContext(),
+                        "Hủy đơn thất bại: ${it.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+        }
+
         return binding.root
     }
 
     private fun setupBuyHistoryListener() {
         binding.rencenBuyItem.visibility = View.INVISIBLE
-        userId = auth.currentUser?.uid ?: ""
-
         val buyItemRef = database.reference.child("user").child(userId).child("BuyHistory")
         val sortingQuery = buyItemRef.orderByChild("currentTime")
 
@@ -70,9 +93,7 @@ class HistoryFragment : Fragment() {
                 listOfOrderItem.clear()
                 for (buySnapshot in snapshot.children) {
                     val buyHistoryItem = buySnapshot.getValue(OrderDetails::class.java)
-                    buyHistoryItem?.let {
-                        listOfOrderItem.add(it)
-                    }
+                    buyHistoryItem?.let { listOfOrderItem.add(it) }
                 }
 
                 listOfOrderItem.reverse()
@@ -88,55 +109,60 @@ class HistoryFragment : Fragment() {
             }
         }
 
-        // Sử dụng addValueEventListener thay vì addListenerForSingleValueEvent
         sortingQuery.addValueEventListener(buyHistoryListener)
     }
 
     private fun setupOrderStatusListener() {
-        // Chỉ thiết lập nếu có đơn hàng
         if (listOfOrderItem.isNotEmpty()) {
-            val itemPushKey = listOfOrderItem[0].itemPushKey
-            if (itemPushKey != null) {
-                val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
+            val itemPushKey = listOfOrderItem[0].itemPushKey ?: return
+            val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
 
-                orderStatusListener = object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val isReceived =
-                            snapshot.child("paymentReceived").getValue(Boolean::class.java) ?: false
-                        val isAccepted =
-                            snapshot.child("orderAccepted").getValue(Boolean::class.java) ?: false
+            orderStatusListener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val isDelivered =
+                        snapshot.child("delivered").getValue(Boolean::class.java) ?: false
+                    val isAccepted =
+                        snapshot.child("orderAccepted").getValue(Boolean::class.java) ?: false
 
-                        with(binding) {
-                            if (isAccepted) {
-                                statusCircle.background.setTint(Color.GREEN)
-                                if (!isReceived) {
-                                    receivedButton.visibility = View.VISIBLE
-                                } else {
-                                    receivedButton.visibility = View.INVISIBLE
-                                }
+                    with(binding) {
+                        if (isAccepted) {
+                            statusCircle.background.setTint(Color.GREEN)
+                            // Hiện nút nếu chưa xác nhận đã nhận hàng
+                            if (!isDelivered) {
+                                receivedButton.visibility = View.VISIBLE
                             } else {
-                                statusCircle.background.setTint(Color.GRAY)
-                                receivedButton.visibility = View.INVISIBLE
+                                receivedButton.visibility = View.GONE
                             }
-                        }
-                    }
 
-                    override fun onCancelled(error: DatabaseError) {
-                        // Xử lý lỗi nếu cần
+                            cancelOrderButton.visibility = View.GONE
+                        } else {
+                            statusCircle.background.setTint(Color.GRAY)
+                            receivedButton.visibility = View.GONE
+                            cancelOrderButton.visibility = View.VISIBLE
+                        }
                     }
                 }
 
-                completeOrderRef.addValueEventListener(orderStatusListener)
+                    override fun onCancelled(error: DatabaseError) {}
             }
+
+            completeOrderRef.addValueEventListener(orderStatusListener)
         }
     }
 
     private fun updateOrderStatus() {
-        val itemPushKey = listOfOrderItem[0].itemPushKey
-        val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey!!)
-        completeOrderRef.child("paymentReceived").setValue(true)
+        val itemPushKey = listOfOrderItem[0].itemPushKey ?: return
+        val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
+
+        val updates = mapOf(
+            "paymentReceived" to true,
+            "status" to "delivered"
+        )
+
+        completeOrderRef.updateChildren(updates)
             .addOnSuccessListener {
                 Toast.makeText(context, "Đã xác nhận nhận hàng", Toast.LENGTH_SHORT).show()
+                binding.receivedButton.visibility = View.GONE
             }
             .addOnFailureListener {
                 Toast.makeText(context, "Không thể cập nhật trạng thái", Toast.LENGTH_SHORT).show()
@@ -144,7 +170,7 @@ class HistoryFragment : Fragment() {
     }
 
     private fun seeItemsRecentBuy() {
-        listOfOrderItem.firstOrNull()?.let { recentBuy ->
+        listOfOrderItem.firstOrNull()?.let {
             val intent = Intent(requireContext(), RecentOrderItems::class.java)
             intent.putExtra("RecentBuyOrderItem", ArrayList(listOfOrderItem) as Serializable)
             startActivity(intent)
@@ -153,29 +179,22 @@ class HistoryFragment : Fragment() {
 
     private fun setDataInRecentBuyItem() {
         binding.rencenBuyItem.visibility = View.VISIBLE
-        val recentOrderItem = listOfOrderItem.firstOrNull()
+        val recentOrderItem = listOfOrderItem.firstOrNull() ?: return
 
-        recentOrderItem?.let {
-            with(binding) {
-                buyAgainFlowerName.text = it.flowerNames?.firstOrNull() ?: ""
-                buyAgainFlowerPrice.text = it.flowerPrices?.firstOrNull() ?: ""
+        with(binding) {
+            buyAgainFlowerName.text = recentOrderItem.flowerNames?.firstOrNull() ?: ""
+            buyAgainFlowerPrice.text = recentOrderItem.flowerPrices?.firstOrNull() ?: ""
 
-                val image = it.flowerImages?.firstOrNull() ?: ""
-                val uri = Uri.parse(image)
-                Glide.with(requireContext()).load(uri).into(buyAgainFlowerImage)
-
-                // Trạng thái đơn hàng được cập nhật trong setupOrderStatusListener
-            }
+            val image = recentOrderItem.flowerImages?.firstOrNull() ?: ""
+            val uri = Uri.parse(image)
+            Glide.with(requireContext()).load(uri).into(buyAgainFlowerImage)
         }
     }
 
-    // Thêm sản phẩm vào giỏ hàng khi người dùng nhấn "Mua lại"
     private fun buyAgain(flowerName: String) {
-        // Tìm thông tin sản phẩm từ lịch sử mua hàng
         for (order in listOfOrderItem) {
             val index = order.flowerNames?.indexOf(flowerName) ?: -1
             if (index != -1) {
-                // Lấy thông tin từ đơn hàng cũ
                 val cartItem = CartItems(
                     flowerName = flowerName,
                     flowerPrice = order.flowerPrices?.get(index) ?: "",
@@ -185,7 +204,6 @@ class HistoryFragment : Fragment() {
                     flowerIngredient = ""
                 )
 
-                // Thêm vào giỏ hàng
                 val userId = auth.currentUser?.uid ?: ""
                 val cartItemRef = database.getReference("user/$userId/CartItems")
 
@@ -194,10 +212,9 @@ class HistoryFragment : Fragment() {
                         Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
                     }
                     .addOnFailureListener {
-                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT)
+                            .show()
                     }
-
-                // Dừng vòng lặp sau khi tìm thấy và xử lý
                 break
             }
         }
@@ -209,15 +226,9 @@ class HistoryFragment : Fragment() {
         val buyAgainFlowerImage = mutableListOf<String>()
 
         for (i in 1 until listOfOrderItem.size) {
-            listOfOrderItem[i].flowerNames?.firstOrNull()?.let {
-                buyAgainFlowerName.add(it)
-            }
-            listOfOrderItem[i].flowerPrices?.firstOrNull()?.let {
-                buyAgainFlowerPrice.add(it)
-            }
-            listOfOrderItem[i].flowerImages?.firstOrNull()?.let {
-                buyAgainFlowerImage.add(it)
-            }
+            listOfOrderItem[i].flowerNames?.firstOrNull()?.let { buyAgainFlowerName.add(it) }
+            listOfOrderItem[i].flowerPrices?.firstOrNull()?.let { buyAgainFlowerPrice.add(it) }
+            listOfOrderItem[i].flowerImages?.firstOrNull()?.let { buyAgainFlowerImage.add(it) }
         }
 
         val rv = binding.buyAgainRecyclerView
@@ -236,8 +247,6 @@ class HistoryFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-
-        // Hủy đăng ký các listener khi fragment bị hủy để tránh rò rỉ bộ nhớ
         try {
             val buyItemRef = database.reference.child("user").child(userId).child("BuyHistory")
             val sortingQuery = buyItemRef.orderByChild("currentTime")
@@ -254,7 +263,6 @@ class HistoryFragment : Fragment() {
                 }
             }
         } catch (e: Exception) {
-            // Xử lý ngoại lệ nếu có
         }
     }
 }

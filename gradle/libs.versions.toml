@@ -2,6 +2,7 @@
 agp = "8.8.2"
 circleimageview = "3.1.0"
 converterGson = "2.9.0"
+core = "3.5.1"
 coreKtxVersion = "1.12.0"
 facebookAndroidSdk = "18.0.3"
 facebookLogin = "latest.version"
@@ -29,6 +30,7 @@ firebaseDatabase = "21.0.0"
 okhttp = "4.12.0"
 retrofit = "2.11.0"
 playServicesCastFramework = "22.0.0"
+zxingAndroidEmbedded = "4.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -37,6 +39,7 @@ androidx-navigation-fragment-ktx-v275 = { module = "androidx.navigation:navigati
 androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationFragmentKtx" }
 circleimageview = { module = "de.hdodenhof:circleimageview", version.ref = "circleimageview" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+core = { module = "com.google.zxing:core", version.ref = "core" }
 facebook-android-sdk = { module = "com.facebook.android:facebook-android-sdk", version.ref = "facebookAndroidSdk" }
 facebook-login = { module = "com.facebook.android:facebook-login", version.ref = "facebookLogin" }
 facebook-login-v1803 = { module = "com.facebook.android:facebook-login", version.ref = "facebookLoginVersion" }
@@ -62,6 +65,7 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 play-services-auth = { module = "com.google.android.gms:play-services-auth" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCastFramework" }
+zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

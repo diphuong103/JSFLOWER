@@ -80,6 +80,11 @@ class Login_Activity : AppCompatActivity() {
             }
         }
 
+        binding.forgetPassword.setOnClickListener {
+            startActivity(Intent(this, ForgetPasswordActivity::class.java))
+
+        }
+
         // Đăng nhập bằng Facebook
         binding.customFbButton.setOnClickListener {
             LoginManager.getInstance().logInWithReadPermissions(

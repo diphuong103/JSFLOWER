@@ -76,8 +76,8 @@
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/statusCircle"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="24dp"
+                    android:layout_height="23dp"
                     android:layout_marginTop="4dp"
                     android:layout_marginEnd="46dp"
                     app:cardBackgroundColor="#959494"
@@ -92,10 +92,23 @@
                     android:backgroundTint="#4AC14E"
                     android:text="Đã nhận"
                     android:textSize="12sp"
-                    android:visibility="invisible"
                     app:layout_constraintEnd_toEndOf="@+id/statusCircle"
                     app:layout_constraintStart_toStartOf="@+id/statusCircle"
                     app:layout_constraintTop_toBottomOf="@+id/statusCircle" />
+
+                <Button
+                    android:id="@+id/cancelOrderButton"
+                    android:layout_width="101dp"
+                    android:layout_height="36dp"
+                    android:backgroundTint="#FF5252"
+                    android:text="Hủy đơn"
+                    android:textSize="12sp"
+                    app:layout_constraintTop_toBottomOf="@+id/receivedButton"
+                    app:layout_constraintStart_toStartOf="@+id/statusCircle"
+                    app:layout_constraintEnd_toEndOf="@+id/statusCircle" />
+
+
+
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 

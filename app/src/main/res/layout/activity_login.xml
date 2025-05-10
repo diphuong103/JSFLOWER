@@ -163,4 +163,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/login_button" />
 
+    <TextView
+        android:id="@+id/forgetPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quên mật khẩu?"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/donthavebutton"
+        app:layout_constraintHorizontal_bias="0.464"
+        app:layout_constraintStart_toStartOf="@+id/donthavebutton"
+        app:layout_constraintTop_toBottomOf="@+id/donthavebutton"
+        app:layout_constraintVertical_bias="0.172" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

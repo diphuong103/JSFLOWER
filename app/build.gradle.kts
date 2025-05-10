@@ -83,6 +83,13 @@ dependencies {
 
     implementation (libs.androidx.core.ktx.v1120)
 
+    // thu vien pdf
+    implementation (libs.core)
+    implementation (libs.zxing.android.embedded)
+
+    // thu vien ZXing
+    implementation (libs.core)
+
 
 
 }
