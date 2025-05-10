@@ -386,25 +386,39 @@ class DetailsActivity : AppCompatActivity() {
 
     private fun addItemToCart() {
         val database = FirebaseDatabase.getInstance().reference
-//        val userId = auth.currentUser?.uid ?: ""
         val userId = auth.currentUser?.uid ?: ""
-        //tao doi tuong the
+
+        // Đảm bảo flowerKey không null trước khi thêm vào giỏ hàng
+        if (flowerKey.isNullOrEmpty() && !flowerName.isNullOrEmpty()) {
+            findFlowerKeyByName {
+                addItemToCartWithKey(userId, database)
+            }
+        } else {
+            addItemToCartWithKey(userId, database)
+        }
+    }
+
+    // Hàm mới để thêm vào giỏ hàng sau khi đã có key
+    private fun addItemToCartWithKey(userId: String, database: DatabaseReference) {
+        println("DEBUG: Adding to cart with flowerKey: $flowerKey")
+
+        // Tạo đối tượng CartItem với flowerKey đúng
         val cartItem = CartItems(
             flowerName.toString(),
             flowerPrice.toString(),
             flowerDescriptions.toString(),
             flowerImage.toString(),
-            1
+            1,
+            flowerIngredients,
+            quantity = 1,
+            flowerKey = flowerKey  // Đảm bảo truyền đúng flowerKey gốc
         )
-
-        // luu du lieu cartitem tu firebase
+        // Lưu dữ liệu cartItem vào Firebase
         database.child("user").child(userId).child("CartItems").push().setValue(cartItem)
             .addOnSuccessListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT).show()
             }.addOnFailureListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thất bại -_-", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thất bại -_-", Toast.LENGTH_SHORT).show()
             }
     }
 

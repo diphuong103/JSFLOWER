@@ -19,6 +19,7 @@ class OrderDetails() : Serializable {
     var paymentReceived: Boolean = false
     var itemPushKey: String? = null
     var currentTime: Long = 0
+    var flowerKey: String?= null
 
     constructor(
         userId: String,
@@ -33,7 +34,8 @@ class OrderDetails() : Serializable {
         time: Long,
         itemPushKey: String?,
         orderAccepted: Boolean,
-        paymentReceived: Boolean
+        paymentReceived: Boolean,
+        flowerKey: String?
     ) : this() {
         this.userUid = userId
         this.userName = name
@@ -48,6 +50,7 @@ class OrderDetails() : Serializable {
         this.itemPushKey = itemPushKey
         this.orderAccepted = orderAccepted
         this.paymentReceived = paymentReceived  // Fixed variable name
+        this.flowerKey = flowerKey
     }
 
     // Constructor for Parcelable

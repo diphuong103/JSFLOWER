@@ -24,7 +24,7 @@ class PopularAdapter(private val popularItems: List<MenuItem>, private val conte
     override fun onBindViewHolder(holder: PopularViewHolder, position: Int) {
         val menuItem = popularItems[position]
         holder.bind(menuItem)
-
+        "CartItems"
         // Set click listener for each item
         holder.itemView.setOnClickListener {
             val intent = Intent(context, DetailsActivity::class.java).apply {

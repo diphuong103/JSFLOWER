@@ -1,13 +1,14 @@
 package com.example.jsflower.Model
 
 data class CartItems(
-    var flowerName: String? = null,
-    var flowerPrice: String? = null,
-    var flowerDescription: String? = null,
-    var flowerImage: String? = null,
-    var flowerQuantity: Int? = null,
-    var flowerIngredient: String?= null,
-
-    ) {
+    val flowerName: String? = null,
+    val flowerPrice: String? = null,
+    val flowerDescription: String? = null,
+    val flowerImage: String? = null,
+    val flowerQuantity: Int? = 1,
+    val flowerIngredient: String? = null,
+    val quantity: Int? = 1,
+    val flowerKey: String? = null
+){
 
 }

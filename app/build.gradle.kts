@@ -63,7 +63,8 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
-    implementation(libs.play.services.auth)
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
+
 
     implementation(libs.firebase.database.ktx)
 
@@ -78,6 +79,9 @@ dependencies {
     implementation (libs.circleimageview)
     implementation (libs.facebook.android.sdk)
     implementation (libs.facebook.login.v1803)
+
+
+    implementation (libs.androidx.core.ktx.v1120)
 
 
 

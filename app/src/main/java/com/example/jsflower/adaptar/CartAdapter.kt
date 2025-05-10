@@ -1,178 +1,151 @@
 package com.example.jsflower.adaptar
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.jsflower.R
-import com.example.jsflower.databinding.CartItemBinding
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 
 class CartAdapter(
     private val context: Context,
-    private val cartItems: MutableList<String>,
-    private val cartItemPrices: MutableList<String>,
-    private var cartDescription: MutableList<String>,
-    private var cartImages: MutableList<String>,
-    private val cartIngredient: MutableList<String>,
-    private val initialQuantities: MutableList<Int>
+    private val flowerNameList: MutableList<String>,
+    private val flowerPriceList: MutableList<String>,
+    private val flowerDescriptionList: MutableList<String>,
+    private val flowerImageList: MutableList<String>,
+    private val flowerIngredientList: MutableList<String>,
+    private val flowerQuantityList: MutableList<Int>,
+    private val listener: CartItemActionListener
 ) : RecyclerView.Adapter<CartAdapter.CartViewHolder>() {
 
-    private val auth = FirebaseAuth.getInstance()
-    private var itemQuantities: MutableList<Int> = initialQuantities
-    private lateinit var cartItemsReference: DatabaseReference
-
-    init {
-        val database = FirebaseDatabase.getInstance()
-        val userId = auth.currentUser?.uid ?: ""
-        cartItemsReference = database.reference.child("user").child(userId).child("CartItems")
+    // Interface để xử lý các sự kiện từ CartAdapter
+    interface CartItemActionListener {
+        fun onCartItemDelete(position: Int)
+        fun onQuantityChanged(position: Int, newQuantity: Int)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CartViewHolder {
-        val binding = CartItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CartViewHolder(binding)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.cart_item, parent, false)
+        return CartViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: CartViewHolder, position: Int) {
-        holder.bind(position)
-    }
+        holder.cartFlowerName.text = flowerNameList[position]
+        holder.cartFlowerPrice.text = flowerPriceList[position]
 
-    override fun getItemCount(): Int = cartItems.size
+        // Thiết lập số lượng hiện tại
+        holder.cartItemQuantity.text = flowerQuantityList[position].toString()
 
-    inner class CartViewHolder(private val binding: CartItemBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+        // Tải hình ảnh bằng Glide
+        Glide.with(context)
+            .load(flowerImageList[position])
+            .into(holder.cartFlowerImage)
 
-        fun bind(position: Int) {
-            binding.apply {
-                cardFlowerName.text = cartItems[position]
-                cartItemPrice.text = cartItemPrices[position]
-                cartItemQuantity.text = itemQuantities[position].toString()
-
-                // Load ảnh
-                Glide.with(binding.root.context)
-                    .load(cartImages[position])
-                    .placeholder(R.drawable.placeholder)
-                    .error(R.drawable.error_image)
-                    .into(binding.cartImage)
-
-                // Nút tăng
-                plusebutton.setOnClickListener {
-                    if (itemQuantities[position] < 10) {
-                        itemQuantities[position]++
-                        cartItemQuantity.text = itemQuantities[position].toString()
+        // Xử lý sự kiện khi người dùng nhấn nút xóa
+        holder.removeButton.setOnClickListener {
+            // Hiển thị dialog xác nhận trước khi xóa
+            android.app.AlertDialog.Builder(context)
+                .setTitle("Xóa sản phẩm")
+                .setMessage("Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?")
+                .setPositiveButton("Xóa") { dialog, _ ->
+                    dialog.dismiss()
+                    // Đảm bảo vị trí hợp lệ
+                    if (position >= 0 && position < flowerNameList.size) {
+                        listener.onCartItemDelete(holder.adapterPosition)
                     }
                 }
-
-                // Nút giảm
-                minusbutton.setOnClickListener {
-                    if (itemQuantities[position] > 1) {
-                        itemQuantities[position]--
-                        cartItemQuantity.text = itemQuantities[position].toString()
-                    }
+                .setNegativeButton("Hủy") { dialog, _ ->
+                    dialog.dismiss()
                 }
+                .create()
+                .show()
+        }
 
-                // Xoá
-                deleteButton.setOnClickListener {
-                    val itemPosition = adapterPosition
-                    if (itemPosition != RecyclerView.NO_POSITION) {
-                        deleteItem(itemPosition)
+        // Xử lý nút tăng số lượng
+        holder.increaseButton.setOnClickListener {
+            // Kiểm tra vị trí có còn hợp lệ không
+            if (position >= 0 && position < flowerQuantityList.size) {
+                val currentQuantity = flowerQuantityList[position]
+                val newQuantity = currentQuantity + 1
+
+                // Giới hạn số lượng tối đa (tùy chọn)
+                val maxQuantity = 99
+                if (newQuantity <= maxQuantity) {
+                    // Cập nhật hiển thị
+                    holder.cartItemQuantity.text = newQuantity.toString()
+
+                    // Cập nhật giá trị trong danh sách
+                    if (position < flowerQuantityList.size) {
+                        flowerQuantityList[position] = newQuantity
                     }
+
+                    // Thông báo thay đổi cho fragment
+                    listener.onQuantityChanged(position, newQuantity)
+                } else {
+                    Toast.makeText(context, "Số lượng tối đa là $maxQuantity", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Xử lý nút giảm số lượng
+        holder.decreaseButton.setOnClickListener {
+            // Kiểm tra vị trí có còn hợp lệ không
+            if (position >= 0 && position < flowerQuantityList.size) {
+                val currentQuantity = flowerQuantityList[position]
+                if (currentQuantity > 1) {
+                    val newQuantity = currentQuantity - 1
+
+                    // Cập nhật hiển thị
+                    holder.cartItemQuantity.text = newQuantity.toString()
+
+                    // Cập nhật giá trị trong danh sách
+                    if (position < flowerQuantityList.size) {
+                        flowerQuantityList[position] = newQuantity
+                    }
+
+                    // Thông báo thay đổi cho fragment
+                    listener.onQuantityChanged(position, newQuantity)
+                } else {
+                    // Nếu số lượng là 1 và người dùng nhấn giảm, xóa sản phẩm
+                    // Đưa ra thông báo xác nhận trước khi xóa
+                    android.app.AlertDialog.Builder(context)
+                        .setTitle("Xóa sản phẩm")
+                        .setMessage("Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?")
+                        .setPositiveButton("Xóa") { dialog, _ ->
+                            dialog.dismiss()
+                            listener.onCartItemDelete(position)
+                        }
+                        .setNegativeButton("Hủy") { dialog, _ ->
+                            dialog.dismiss()
+                        }
+                        .create()
+                        .show()
                 }
             }
         }
     }
 
-    private fun deleteItem(position: Int) {
-        if (position < 0 || position >= cartItems.size) return
-
-        // Lưu lại vị trí hiện tại và đảm bảo nó còn hợp lệ trong danh sách
-        val currentPosition = position
-
-        getUniqueKetAtposition(currentPosition) { uniqueKey ->
-            if (uniqueKey != null) {
-                cartItemsReference.child(uniqueKey).removeValue().addOnSuccessListener {
-                    try {
-                        // Kiểm tra lại vị trí có còn hợp lệ không trước khi xóa
-                        if (currentPosition < cartItems.size) {
-                            cartItems.removeAt(currentPosition)
-                        }
-                        if (currentPosition < cartItemPrices.size) {
-                            cartItemPrices.removeAt(currentPosition)
-                        }
-                        if (currentPosition < cartDescription.size) {
-                            cartDescription.removeAt(currentPosition)
-                        }
-                        if (currentPosition < cartImages.size) {
-                            cartImages.removeAt(currentPosition)
-                        }
-                        if (currentPosition < cartIngredient.size) {
-                            cartIngredient.removeAt(currentPosition)
-                        }
-                        if (currentPosition < itemQuantities.size) {
-                            itemQuantities.removeAt(currentPosition)
-                        }
-
-                        notifyItemRemoved(currentPosition)
-                        notifyItemRangeChanged(currentPosition, cartItems.size)
-                        Toast.makeText(context, "Xóa thành công", Toast.LENGTH_SHORT).show()
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.e("CartAdapter", "Lỗi khi xóa phần tử: ${e.message}")
-                        // Cập nhật lại toàn bộ adapter
-                        notifyDataSetChanged()
-                        Toast.makeText(context, "Đã xóa khỏi giỏ hàng", Toast.LENGTH_SHORT).show()
-                    }
-                }.addOnFailureListener {
-                    Toast.makeText(context, "Xóa thất bại", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun getUniqueKetAtposition(position: Int, onComplete: (String?) -> Unit) {
-        cartItemsReference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                try {
-                    // Kiểm tra xem snapshot có tồn tại không
-                    if (snapshot.exists() && snapshot.childrenCount > 0) {
-                        val children = snapshot.children.toList()
-                        // Kiểm tra xem position có hợp lệ không
-                        val key = if (position < children.size) {
-                            children[position].key
-                        } else {
-                            Log.e("CartAdapter", "Position $position ngoài phạm vi (size: ${children.size})")
-                            null
-                        }
-                        onComplete(key)
-                    } else {
-                        Log.e("CartAdapter", "Không có dữ liệu trong giỏ hàng")
-                        onComplete(null)
-                    }
-                } catch (e: Exception) {
-                    Log.e("CartAdapter", "Lỗi khi lấy key: ${e.message}")
-                    onComplete(null)
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.e("CartAdapter", "Database error: ${error.message}")
-                onComplete(null)
-            }
-        })
-
-            fun onCancelled(error: DatabaseError) {
-                onComplete(null)
-            }
+    override fun getItemCount(): Int {
+        return flowerNameList.size
     }
 
     fun getUpdatedItemsQuantities(): MutableList<Int> {
-        return itemQuantities.toMutableList()
+        return flowerQuantityList
+    }
+
+    inner class CartViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val cartFlowerName: TextView = itemView.findViewById(R.id.cartItemName)
+        val cartFlowerPrice: TextView = itemView.findViewById(R.id.cartItemPrice)
+        val cartFlowerImage: ImageView = itemView.findViewById(R.id.cartItemImage)
+        val cartItemQuantity: TextView = itemView.findViewById(R.id.cartItemQuantity)
+        val increaseButton: ImageButton = itemView.findViewById(R.id.increaseQuantityBtn)
+        val decreaseButton: ImageButton = itemView.findViewById(R.id.decreaseQuantityBtn)
+        val removeButton: Button = itemView.findViewById(R.id.removeButton)
     }
 }
