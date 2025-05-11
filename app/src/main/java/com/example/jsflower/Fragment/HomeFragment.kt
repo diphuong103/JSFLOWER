@@ -24,7 +24,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-
+import kotlin.math.min
 
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
@@ -44,11 +44,6 @@ class HomeFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater, container, false)
 
-        binding.viewAllMenu.setOnClickListener {
-            val bottomSheetDialog = MenuBottomSheetFragment()
-            bottomSheetDialog.show(parentFragmentManager, "Test")
-        }
-
         // Initialize database
         database = FirebaseDatabase.getInstance()
 
@@ -57,11 +52,8 @@ class HomeFragment : Fragment() {
 
         // Lay du lieu categories tu database
         setupCategoriesRecyclerView()
-        setupPopularProducts()
 
         return binding.root
-
-
     }
 
     private fun getAndDisplayPopularItems() {
@@ -77,7 +69,6 @@ class HomeFragment : Fragment() {
                         menuItems.add(it)
                     }
                 }
-                // lay ngau nhien item tu db
                 if (menuItems.isNotEmpty()) {
                     randomPopularItems()
                 }
@@ -95,51 +86,26 @@ class HomeFragment : Fragment() {
 
     private fun randomPopularItems() {
         val index = menuItems.indices.toList().shuffled()
-        val numItemToShow = minOf(6, menuItems.size)
+        val numItemToShow = min(6, menuItems.size)
         val subsetMenuItems = index.take(numItemToShow).map {
             menuItems[it]
         }
         setPopularItemAdapter(subsetMenuItems)
-        setProductItemAdapter(subsetMenuItems)
     }
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
-        val adapter = MenuAdapter(subsetMenuItems, requireContext())
+        val adapter = PopularAdapter(subsetMenuItems, requireContext()) { menuItem ->
+            addToCart(menuItem) // Thêm vào giỏ hàng
+        }
         binding.popularRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.popularRecyclerView.adapter = adapter
     }
 
-    private fun setProductItemAdapter(subsetMenuItems: List<MenuItem>) {
-        val adapter = MenuAdapter(subsetMenuItems, requireContext())
-        binding.categoryFlowerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.categoryFlowerRecyclerView.adapter = adapter
-    }
+    private fun addToCart(menuItem: MenuItem) {
+        // Handle adding to cart
+        Toast.makeText(requireContext(), "Thêm vào giỏ hàng: ${menuItem.flowerName}", Toast.LENGTH_SHORT).show()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // slider banner home_activity
-        val imageList = ArrayList<SlideModel>()
-        imageList.add(SlideModel(R.drawable.bannerlanghoadep, ScaleTypes.FIT))
-        imageList.add(SlideModel(R.drawable.banner_jsflower, ScaleTypes.FIT))
-        imageList.add(SlideModel(R.drawable.banner_js, ScaleTypes.FIT))
-
-        val imageSlider = binding.imageSlider
-        imageSlider.setImageList(imageList)
-        imageSlider.setImageList(imageList, ScaleTypes.FIT)
-
-        imageSlider.setItemClickListener(object : ItemClickListener {
-            override fun doubleClick(position: Int) {
-                // Không cần triển khai nếu không sử dụng
-            }
-
-            override fun onItemSelected(position: Int) {
-                val itemMessage = "Selected Image $position"
-                Toast.makeText(requireContext(), itemMessage, Toast.LENGTH_SHORT).show()
-            }
-        })
-
-        binding.popularRecyclerView.addItemDecoration(PopularAdapter.VerticalSpaceItemDecoration(32))
+        // Optionally, save to SharedPreferences or Firebase for cart persistence
     }
 
     private fun setupCategoriesRecyclerView() {
@@ -147,26 +113,23 @@ class HomeFragment : Fragment() {
         binding.categoriesRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
-        // Thiết lập adapter ban đầu với danh sách trống
         val adapter = CategoryAdapter(
             requireContext(),
             categoryList,
             object : CategoryAdapter.OnCategoryClickListener {
                 override fun onCategoryClick(category: CategoryModel, position: Int) {
-                    // Xử lý khi người dùng nhấp vào một thể loại
                     Toast.makeText(
                         requireContext(),
                         "Đã chọn: ${category.name}",
                         Toast.LENGTH_SHORT
                     ).show()
 
-                    // Tải danh sách sản phẩm của thể loại đã chọn
+                    // Load products by category
                     loadCategoryProducts(category)
                 }
             })
         binding.categoriesRecyclerView.adapter = adapter
 
-        // Tải dữ liệu danh mục từ Firebase
         loadCategoriesFromFirebase()
     }
 
@@ -188,12 +151,10 @@ class HomeFragment : Fragment() {
                     categoryList.add(category)
                 }
 
-                // Cập nhật adapter với dữ liệu mới
                 (binding.categoriesRecyclerView.adapter as CategoryAdapter).updateCategories(
                     categoryList
                 )
 
-                // Nếu có ít nhất một danh mục, tải sản phẩm của danh mục đầu tiên
                 if (categoryList.isNotEmpty()) {
                     loadCategoryProducts(categoryList[0])
                 }
@@ -210,10 +171,8 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadCategoryProducts(category: CategoryModel) {
-        // Cập nhật tiêu đề phần sản phẩm theo thể loại
         binding.categoryProductsHeader.text = "Sản phẩm ${category.name}"
 
-        // Tải sản phẩm theo category.id từ database
         val categoryProductsRef =
             database.reference.child("category").child(category.id).child("products")
 
@@ -221,12 +180,10 @@ class HomeFragment : Fragment() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val categoryProducts = mutableListOf<MenuItem>()
 
-                // Đếm số lượng sản phẩm để theo dõi khi nào tất cả đã được tải
                 val totalProducts = snapshot.childrenCount
                 var loadedProducts = 0
 
                 if (totalProducts == 0L) {
-                    // Nếu không có sản phẩm trong danh mục này
                     setProductItemAdapter(emptyList())
                     return
                 }
@@ -234,7 +191,6 @@ class HomeFragment : Fragment() {
                 for (productSnapshot in snapshot.children) {
                     val productId = productSnapshot.key ?: continue
 
-                    // Lấy chi tiết sản phẩm từ danh sách sản phẩm
                     database.reference.child("list").child(productId)
                         .addListenerForSingleValueEvent(object : ValueEventListener {
                             override fun onDataChange(productDataSnapshot: DataSnapshot) {
@@ -245,7 +201,6 @@ class HomeFragment : Fragment() {
 
                                 loadedProducts++
 
-                                // Khi đã tải tất cả sản phẩm, cập nhật RecyclerView
                                 if (loadedProducts.toLong() == totalProducts) {
                                     setProductItemAdapter(categoryProducts)
                                 }
@@ -269,34 +224,14 @@ class HomeFragment : Fragment() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
-
         })
     }
 
-    private fun setupPopularProducts() {
-        val flowerRef = database.reference.child("list")
-        flowerRef.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val items = mutableListOf<MenuItem>()
-                for (flowerSnapshot in snapshot.children) {
-                    val menuItem = flowerSnapshot.getValue(MenuItem::class.java)
-                    menuItem?.let {
-                        // ĐẢM BẢO key được gán đúng
-                        it.key = flowerSnapshot.key ?: ""
-                        items.add(it)
-                    }
-                }
-
-                // Lọc và hiển thị các mục phổ biến
-                val popularItems = items.shuffled().take(6)
-                val adapter = PopularAdapter(popularItems, requireContext())
-                binding.popularRecyclerView.adapter = adapter
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Xử lý lỗi
-            }
-        })
+    private fun setProductItemAdapter(categoryProducts: List<MenuItem>) {
+        val adapter = PopularAdapter(categoryProducts, requireContext()) { menuItem ->
+            addToCart(menuItem) // Thêm vào giỏ hàng
+        }
+        binding.categoryFlowerRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.categoryFlowerRecyclerView.adapter = adapter
     }
 }

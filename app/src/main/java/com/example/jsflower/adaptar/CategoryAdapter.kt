@@ -48,7 +48,7 @@ class CategoryAdapter(
 
         // Highlight selected category
         if (selectedPosition == position) {
-            holder.categoryCard.setCardBackgroundColor(context.getColor(R.color.selected_category_bg))
+            holder.categoryCard.setCardBackgroundColor(context.getColor(R.color.startcolor))
             holder.categoryName.setTextColor(context.getColor(R.color.selected_category_text))
         } else {
             holder.categoryCard.setCardBackgroundColor(context.getColor(R.color.unselected_category_bg))

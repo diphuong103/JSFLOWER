@@ -4,33 +4,85 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="6dp"
+    android:layout_margin="8dp"
     app:cardCornerRadius="16dp"
-    app:cardElevation="3dp">
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Product Image -->
-        <ImageView
-            android:id="@+id/menuImage"
+        <!-- Sale Banner / Badge -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:scaleType="fitCenter"
-            android:padding="4dp"
-            android:background="#F5F5F5"
-            tools:srcCompat="@tools:sample/backgrounds/scenic"/>
+            android:layout_height="wrap_content">
+
+            <!-- Product Image -->
+            <ImageView
+                android:id="@+id/menuImage"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:scaleType="centerCrop"
+                android:padding="4dp"
+                android:background="#F5F5F5"
+                tools:srcCompat="@tools:sample/backgrounds/scenic"/>
+
+            <!-- Sale Badge -->
+            <TextView
+                android:id="@+id/saleBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SALE"
+                android:textColor="#FFFFFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:background="@drawable/sale_badge_shape"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:layout_margin="8dp"/>
+
+            <!-- Favorite Button -->
+            <ImageButton
+                android:id="@+id/favoriteButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="end|top"
+                android:layout_margin="8dp"
+                android:background="@drawable/circle_background"
+                android:src="@drawable/favorite_svgrepo_com"
+                android:contentDescription="Thêm vào yêu thích"/>
+        </FrameLayout>
 
         <!-- Product Info -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:padding="8dp">
 
             <!-- Product Name -->
+            <RatingBar
+                android:id="@+id/ratingBar"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:progressTint="#FFC107"
+                android:rating="4.5"
+                android:stepSize="0.5" />
+
+            <TextView
+                android:id="@+id/ratingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:text="(42)"
+                android:textColor="#666666"
+                android:textSize="12sp" />
+
             <TextView
                 android:id="@+id/menuFlowerName"
                 android:layout_width="match_parent"
@@ -40,10 +92,21 @@
                 android:text="Flower Name"
                 android:textAlignment="center"
                 android:textColor="#333333"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
                 android:minHeight="40dp"
                 android:gravity="center" />
+
+            <!-- Short Description -->
+
+            <!-- Rating Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:layout_marginTop="4dp">
+
+            </LinearLayout>
 
             <!-- Price Layout -->
             <LinearLayout
@@ -59,7 +122,7 @@
                     android:layout_height="wrap_content"
                     android:text="219,000"
                     android:textColor="#D70B0B"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -69,23 +132,92 @@
                     android:layout_marginStart="4dp"
                     android:text="VND"
                     android:textColor="#D70B0B"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- View Product Button -->
-            <TextView
-                android:id="@+id/menuAddToCart"
+            <!-- Shipping Info -->
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:layout_marginTop="12dp"
-                android:background="@drawable/addtocardshape"
+                android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Xem sản phẩm"
-                android:textAllCaps="false"
-                android:textColor="@android:color/white"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="4dp">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:src="@drawable/delivery_scooter_svgrepo_com"
+                    app:tint="#4CAF50" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Giao hàng tốc độ"
+                    android:textSize="12sp"
+                    android:textColor="#4CAF50"
+                    android:layout_marginStart="4dp"/>
+            </LinearLayout>
+
+            <!-- Add to Cart Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <!-- Quantity Controls -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="4dp"
+                    android:background="@drawable/quantity_background">
+
+                    <ImageButton
+                        android:id="@+id/decreaseQuantity"
+                        android:layout_width="36dp"
+                        android:layout_height="match_parent"
+                        android:background="?attr/selectableItemBackground"
+                        android:src="@drawable/minus"
+                        android:tint="#333333"
+                        android:contentDescription="Giảm số lượng"/>
+
+                    <TextView
+                        android:id="@+id/quantityValue"
+                        android:layout_width="36dp"
+                        android:layout_height="match_parent"
+                        android:text="1"
+                        android:gravity="center"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="#333333"/>
+
+                    <ImageButton
+                        android:id="@+id/increaseQuantity"
+                        android:layout_width="36dp"
+                        android:layout_height="match_parent"
+                        android:background="?attr/selectableItemBackground"
+                        android:src="@drawable/plus"
+                        android:tint="#333333"
+                        android:contentDescription="Tăng số lượng"/>
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/menuAddToCart"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/addtocardshape"
+                    android:gravity="center"
+                    android:text="Thêm vào giỏ hàng"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:drawableStart="@drawable/ic_shopping_cart"
+                    android:drawablePadding="8dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

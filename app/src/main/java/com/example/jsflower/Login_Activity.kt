@@ -233,18 +233,18 @@ class Login_Activity : AppCompatActivity() {
                         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                         editText.transformationMethod = null
                         editText.setCompoundDrawablesWithIntrinsicBounds(
-                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            ContextCompat.getDrawable(this, R.drawable.lock_svgrepo_com),
                             null,
-                            ContextCompat.getDrawable(this, R.drawable.eye),
+                            ContextCompat.getDrawable(this, R.drawable.hear_no_evil_monkey_svgrepo_com),
                             null
                         )
                     } else {
                         editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                         editText.transformationMethod = PasswordTransformationMethod.getInstance()
                         editText.setCompoundDrawablesWithIntrinsicBounds(
-                            ContextCompat.getDrawable(this, R.drawable.lock),
+                            ContextCompat.getDrawable(this, R.drawable.lock_svgrepo_com),
                             null,
-                            ContextCompat.getDrawable(this, R.drawable.eye_hide),
+                            ContextCompat.getDrawable(this, R.drawable.see_no_evil_monkey_svgrepo_com),
                             null
                         )
                     }

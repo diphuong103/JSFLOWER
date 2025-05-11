@@ -13,8 +13,11 @@ import com.example.jsflower.DetailsActivity
 import com.example.jsflower.Model.MenuItem
 import com.example.jsflower.databinding.MenuItemBinding
 
-class PopularAdapter(private val popularItems: List<MenuItem>, private val context: Context) :
-    RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
+class PopularAdapter(
+    private val popularItems: List<MenuItem>,
+    private val context: Context,
+    private val onAddToCart: (MenuItem) -> Unit
+) : RecyclerView.Adapter<PopularAdapter.PopularViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PopularViewHolder {
         val binding = MenuItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -24,8 +27,13 @@ class PopularAdapter(private val popularItems: List<MenuItem>, private val conte
     override fun onBindViewHolder(holder: PopularViewHolder, position: Int) {
         val menuItem = popularItems[position]
         holder.bind(menuItem)
-        "CartItems"
-        // Set click listener for each item
+
+        // Set click listener for the "Add to Cart" button
+        holder.binding.menuAddToCart.setOnClickListener {
+            onAddToCart(menuItem) // Add item to cart
+        }
+
+        // Set click listener for the item itself to go to the DetailsActivity
         holder.itemView.setOnClickListener {
             val intent = Intent(context, DetailsActivity::class.java).apply {
                 putExtra("MenuItemName", menuItem.flowerName)
@@ -34,18 +42,14 @@ class PopularAdapter(private val popularItems: List<MenuItem>, private val conte
                 putExtra("MenuItemDescription", menuItem.flowerDescription)
                 putExtra("MenuItemIngredient", menuItem.flowerIngredient)
                 putExtra("MenuItemKey", menuItem.key)
-
-                // In ra log để debug
-                println("DEBUG: Sending MenuItemKey from PopularAdapter: ${menuItem.key}")
             }
             context.startActivity(intent)
         }
-
     }
 
     override fun getItemCount(): Int = popularItems.size
 
-    inner class PopularViewHolder(private val binding: MenuItemBinding) :
+    inner class PopularViewHolder(val binding: MenuItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(menuItem: MenuItem) {
@@ -62,6 +66,7 @@ class PopularAdapter(private val popularItems: List<MenuItem>, private val conte
         }
     }
 
+    // Optional: Use this to add space between items in the RecyclerView
     class VerticalSpaceItemDecoration(private val verticalSpaceHeight: Int) :
         RecyclerView.ItemDecoration() {
         override fun getItemOffsets(
@@ -76,7 +81,7 @@ class PopularAdapter(private val popularItems: List<MenuItem>, private val conte
             if (position < itemCount - 1) {
                 outRect.bottom = verticalSpaceHeight
             } else {
-                outRect.bottom = 0 // Không thêm khoảng cách cho item cuối
+                outRect.bottom = 0 // Don't add space for the last item
             }
         }
     }
