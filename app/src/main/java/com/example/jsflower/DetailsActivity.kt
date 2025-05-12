@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -22,7 +23,9 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
+import java.util.Currency
 import java.util.Date
 import java.util.Locale
 
@@ -43,6 +46,7 @@ class DetailsActivity : AppCompatActivity() {
     private var flowerIngredients: String? = null
     private var flowerPrice: String? = null
     private var flowerKey: String? = null
+    private var flowerTag: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,18 +63,47 @@ class DetailsActivity : AppCompatActivity() {
         flowerPrice = intent.getStringExtra("MenuItemPrice")
         flowerImage = intent.getStringExtra("MenuItemImage")
         flowerKey = intent.getStringExtra("MenuItemKey")
+        flowerTag = intent.getStringExtra("TAG")
 
         // Log the retrieved key for debugging
         println("DEBUG: Retrieved flowerKey from intent: $flowerKey")
         println("DEBUG: Received data in DetailsActivity")
         println("DEBUG: flowerName = $flowerName")
         println("DEBUG: flowerKey = $flowerKey")
+        println("DEBUG: TAG = $flowerTag")
 
         with(binding) {
             detailFlowerName.text = flowerName
             detailDescriptionTextView.text = flowerDescriptions
             detailIngredients.text = flowerIngredients
             priceTextView.text = flowerPrice
+            tagProduct.text = flowerTag
+
+            var productRealPrice: Int? = null
+
+            if (!flowerPrice.isNullOrEmpty()) {
+                val price = flowerPrice?.toIntOrNull()
+
+                when (flowerTag) {
+                    "Sale" -> productRealPrice = price?.times(75)?.div(100) // giảm 25%
+                    "Mới" -> productRealPrice = price?.times(85)?.div(100) // giảm 15%
+                    "Nổi bật" -> productRealPrice = price?.times(80)?.div(100) // giảm 20%
+                    "Mặc định" -> {
+                        tagProduct.visibility = View.GONE
+                        realPrice.visibility = View.GONE
+                    }
+
+                    else -> realPrice.text = flowerPrice // Hoặc ẩn realPrice nếu không có tag
+                }
+
+                // Hiển thị giá gốc và giá sau giảm
+                if (productRealPrice != null) {
+                    realPrice.text = formatVND(price?.toDouble() ?: 0.0) // Giá gốc
+                    priceTextView.text = formatVND(productRealPrice.toDouble()) // Giá sau giảm
+                }
+            }
+
+
             Glide.with(this@DetailsActivity).load(Uri.parse(flowerImage))
                 .into(detailsFlowerImageView)
         }
@@ -79,7 +112,9 @@ class DetailsActivity : AppCompatActivity() {
             findFlowerKeyByName {
                 loadDataWithKey()
             }
+
         }
+
 
         // First find the key if it's not directly provided
         if (flowerKey.isNullOrEmpty() && !flowerName.isNullOrEmpty()) {
@@ -411,14 +446,16 @@ class DetailsActivity : AppCompatActivity() {
             1,
             flowerIngredients,
             quantity = 1,
-            flowerKey = flowerKey  // Đảm bảo truyền đúng flowerKey gốc
+            flowerKey = flowerKey
         )
         // Lưu dữ liệu cartItem vào Firebase
         database.child("user").child(userId).child("CartItems").push().setValue(cartItem)
             .addOnSuccessListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT)
+                    .show()
             }.addOnFailureListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thất bại -_-", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thất bại -_-", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -480,5 +517,14 @@ class DetailsActivity : AppCompatActivity() {
 
         binding.suggestedProductsRecyclerView.layoutManager = layoutManager
         binding.suggestedProductsRecyclerView.adapter = adapter
+    }
+
+    fun formatVND(amount: Number): String {
+        val localeVN = Locale("vi", "VN")
+        val currencyVN = Currency.getInstance("VND")
+
+        val vndFormat = NumberFormat.getCurrencyInstance(localeVN)
+        vndFormat.currency = currencyVN
+        return vndFormat.format(amount)
     }
 }

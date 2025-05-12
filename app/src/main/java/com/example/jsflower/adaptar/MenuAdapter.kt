@@ -45,7 +45,7 @@ class MenuAdapter(private val menuItems: List<MenuItem>, private val context: Co
 
         fun bind(menuItem: MenuItem) {
             binding.menuFlowerName.text = menuItem.flowerName
-            binding.menuPrice.text = menuItem.flowerPrice
+            binding.menusalePrice.text = menuItem.flowerPrice
 
             try {
                 Glide.with(context)

@@ -8,15 +8,9 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.denzcoskun.imageslider.constants.ScaleTypes
-import com.denzcoskun.imageslider.interfaces.ItemClickListener
-import com.denzcoskun.imageslider.models.SlideModel
-import com.example.jsflower.MenuBottomSheetFragment
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.MenuItem
-import com.example.jsflower.R
 import com.example.jsflower.adaptar.CategoryAdapter
-import com.example.jsflower.adaptar.MenuAdapter
 import com.example.jsflower.adaptar.PopularAdapter
 import com.example.jsflower.databinding.FragmentHomeBinding
 import com.google.firebase.database.DataSnapshot
@@ -28,7 +22,6 @@ import kotlin.math.min
 
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
-
     private lateinit var database: FirebaseDatabase
     private lateinit var menuItems: MutableList<MenuItem>
     private lateinit var categoryList: ArrayList<CategoryModel>

@@ -11,7 +11,7 @@ import com.bumptech.glide.Glide
 import com.example.jsflower.Model.ReviewModel
 import com.example.jsflower.R
 
-class ReviewAdapter(private val reviewsList: List<ReviewModel>) :
+class   ReviewAdapter(private val reviewsList: List<ReviewModel>) :
     RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder>() {
 
     class ReviewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

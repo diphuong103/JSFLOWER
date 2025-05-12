@@ -28,9 +28,9 @@
                 android:background="#F5F5F5"
                 tools:srcCompat="@tools:sample/backgrounds/scenic"/>
 
-            <!-- Sale Badge -->
+            <!-- Tag Badge -->
             <TextView
-                android:id="@+id/saleBadge"
+                android:id="@+id/tagBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="SALE"
@@ -44,16 +44,6 @@
                 android:paddingBottom="4dp"
                 android:layout_margin="8dp"/>
 
-            <!-- Favorite Button -->
-            <ImageButton
-                android:id="@+id/favoriteButton"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="end|top"
-                android:layout_margin="8dp"
-                android:background="@drawable/circle_background"
-                android:src="@drawable/favorite_svgrepo_com"
-                android:contentDescription="Thêm vào yêu thích"/>
         </FrameLayout>
 
         <!-- Product Info -->
@@ -63,7 +53,7 @@
             android:orientation="vertical"
             android:padding="8dp">
 
-            <!-- Product Name -->
+            <!-- Rating -->
             <RatingBar
                 android:id="@+id/ratingBar"
                 style="?android:attr/ratingBarStyleSmall"
@@ -83,6 +73,7 @@
                 android:textColor="#666666"
                 android:textSize="12sp" />
 
+            <!-- Product Name -->
             <TextView
                 android:id="@+id/menuFlowerName"
                 android:layout_width="match_parent"
@@ -97,18 +88,6 @@
                 android:minHeight="40dp"
                 android:gravity="center" />
 
-            <!-- Short Description -->
-
-            <!-- Rating Bar -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginTop="4dp">
-
-            </LinearLayout>
-
-            <!-- Price Layout -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -117,7 +96,17 @@
                 android:layout_marginTop="8dp">
 
                 <TextView
-                    android:id="@+id/menuPrice"
+                    android:id="@+id/realPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="22dp"
+                    android:layout_marginEnd="8dp"
+                    android:paddingTop="6dp"
+                    android:text="259,000"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    android:textStyle="italic"/>
+                <TextView
+                    android:id="@+id/menusalePrice"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="219,000"
@@ -159,65 +148,21 @@
             </LinearLayout>
 
             <!-- Add to Cart Button -->
-            <LinearLayout
+            <Button
+                android:id="@+id/menuAddToCart"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-
-                <!-- Quantity Controls -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_marginEnd="4dp"
-                    android:background="@drawable/quantity_background">
-
-                    <ImageButton
-                        android:id="@+id/decreaseQuantity"
-                        android:layout_width="36dp"
-                        android:layout_height="match_parent"
-                        android:background="?attr/selectableItemBackground"
-                        android:src="@drawable/minus"
-                        android:tint="#333333"
-                        android:contentDescription="Giảm số lượng"/>
-
-                    <TextView
-                        android:id="@+id/quantityValue"
-                        android:layout_width="36dp"
-                        android:layout_height="match_parent"
-                        android:text="1"
-                        android:gravity="center"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#333333"/>
-
-                    <ImageButton
-                        android:id="@+id/increaseQuantity"
-                        android:layout_width="36dp"
-                        android:layout_height="match_parent"
-                        android:background="?attr/selectableItemBackground"
-                        android:src="@drawable/plus"
-                        android:tint="#333333"
-                        android:contentDescription="Tăng số lượng"/>
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/menuAddToCart"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/addtocardshape"
-                    android:gravity="center"
-                    android:text="Thêm vào giỏ hàng"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:drawableStart="@drawable/ic_shopping_cart"
-                    android:drawablePadding="8dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"/>
-            </LinearLayout>
+                android:background="@drawable/addtocardshape"
+                android:gravity="center"
+                android:text="Thêm vào giỏ hàng"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:drawableStart="@drawable/cart"
+                android:drawablePadding="8dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"/>
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

@@ -25,6 +25,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import java.util.Date
 
 class SignActivity : AppCompatActivity() {
 
@@ -67,7 +68,7 @@ class SignActivity : AppCompatActivity() {
             } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 Toast.makeText(this, "Email không hợp lệ", Toast.LENGTH_SHORT).show()
             } else {
-                createAccount(username, email, password)
+                checkEmailExistence(email, username, password)
             }
         }
 
@@ -85,10 +86,27 @@ class SignActivity : AppCompatActivity() {
             launcher.launch(signInIntent)
         }
 
-
         // Chuyển qua màn hình đăng nhập
         binding.alreadyhavebutton.setOnClickListener {
             startActivity(Intent(this, Login_Activity::class.java))
+        }
+    }
+
+    private fun checkEmailExistence(email: String, username: String, password: String) {
+        // Kiểm tra email trong Firebase Authentication
+        auth.fetchSignInMethodsForEmail(email).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val signInMethods = task.result?.signInMethods
+                if (signInMethods != null && signInMethods.isNotEmpty()) {
+                    // Email đã được đăng ký
+                    Toast.makeText(this, "Email đã tồn tại", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Email chưa tồn tại, tiến hành tạo tài khoản
+                    createAccount(username, email, password)
+                }
+            } else {
+                Toast.makeText(this, "Lỗi khi kiểm tra email: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -96,7 +114,8 @@ class SignActivity : AppCompatActivity() {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 Toast.makeText(this, "Tạo tài khoản thành công", Toast.LENGTH_SHORT).show()
-                saveUserData(username, email)
+                val currentDate = Date() // Lưu thời gian hiện tại
+                saveUserData(username, email, currentDate)
                 updateUi(auth.currentUser)
             } else {
                 Toast.makeText(this, "Tạo tài khoản thất bại", Toast.LENGTH_SHORT).show()
@@ -105,8 +124,8 @@ class SignActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveUserData(username: String, email: String) {
-        val user = UserModel(username, email)
+    private fun saveUserData(username: String, email: String, date: Date) {
+        val user = UserModel(username, email, createDate = date.toString())
         val userId = auth.currentUser!!.uid
         database.child("user").child(userId).setValue(user)
             .addOnSuccessListener {
@@ -120,8 +139,9 @@ class SignActivity : AppCompatActivity() {
     private fun saveUserDataGG(user: FirebaseUser?) {
         val userName = user?.displayName ?: "Người dùng Google"
         val email = user?.email ?: "Không có email"
+        val currentDate = Date() // Lưu thời gian hiện tại
 
-        val userModel = UserModel(userName, email)
+        val userModel = UserModel(userName, email, createDate = currentDate.toString())
         val userId = user?.uid
 
         userId?.let {

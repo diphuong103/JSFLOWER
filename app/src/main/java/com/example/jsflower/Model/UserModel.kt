@@ -5,4 +5,5 @@ data class UserModel(
     val email: String? = null,
     val password: String? = null,
     val imageUrl: String? = null,
+    val createDate: String? = null,
 )
