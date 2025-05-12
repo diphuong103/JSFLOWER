@@ -1,6 +1,7 @@
 package com.example.jsflower.Fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,8 +9,13 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.denzcoskun.imageslider.constants.ScaleTypes
+import com.denzcoskun.imageslider.interfaces.ItemClickListener
+import com.denzcoskun.imageslider.models.SlideModel
+import com.example.jsflower.Model.BannerModel
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.MenuItem
+import com.example.jsflower.R
 import com.example.jsflower.adaptar.CategoryAdapter
 import com.example.jsflower.adaptar.PopularAdapter
 import com.example.jsflower.databinding.FragmentHomeBinding
@@ -18,6 +24,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.util.Date
 import kotlin.math.min
 
 class HomeFragment : Fragment() {
@@ -48,6 +55,83 @@ class HomeFragment : Fragment() {
 
         return binding.root
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Initialize image slider with loading indicator
+        val imageSlider = binding.imageSlider
+
+        // Setup default images (will be used if Firebase data is not available)
+        val defaultImageList = ArrayList<SlideModel>().apply {
+            add(SlideModel(R.drawable.bannerlanghoadep, ScaleTypes.FIT))
+            add(SlideModel(R.drawable.banner_jsflower, ScaleTypes.FIT))
+            add(SlideModel(R.drawable.banner_js, ScaleTypes.FIT))
+        }
+
+        // Reference to the banners in Firebase
+        val bannersRef = FirebaseDatabase.getInstance().getReference("banners")
+
+        bannersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val currentDate = Date().time
+                val activeBanners = ArrayList<BannerModel>()
+
+                // Filter active banners
+                for (bannerSnapshot in snapshot.children) {
+                    val banner = bannerSnapshot.getValue(BannerModel::class.java)
+                    banner?.let {
+                        // Only include active banners that are currently valid
+                        if (it.isActive && it.startDate <= currentDate && it.endDate >= currentDate) {
+                            activeBanners.add(it)
+                        }
+                    }
+                }
+
+                // Update the image slider
+                if (activeBanners.isNotEmpty()) {
+                    // We have banners from Firebase, use them
+                    val firebaseImageList = ArrayList<SlideModel>()
+
+                    for (banner in activeBanners) {
+                        if (banner.imageUrl.isNotEmpty()) {
+                            firebaseImageList.add(SlideModel(banner.imageUrl, banner.title, ScaleTypes.FIT))
+                        }
+                    }
+
+                    if (firebaseImageList.isNotEmpty()) {
+                        // Use Firebase banners
+                        imageSlider.setImageList(firebaseImageList, ScaleTypes.FIT)
+                    } else {
+                        // No valid image URLs, use defaults
+                        imageSlider.setImageList(defaultImageList, ScaleTypes.FIT)
+                    }
+                } else {
+                    // No active banners, use defaults
+                    imageSlider.setImageList(defaultImageList, ScaleTypes.FIT)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("HomeFragment", "Error loading banners: ${error.message}")
+                // Use default images on error
+                imageSlider.setImageList(defaultImageList, ScaleTypes.FIT)
+            }
+        })
+
+        // Set up click listener for the slider
+        imageSlider.setItemClickListener(object : ItemClickListener {
+            override fun doubleClick(position: Int) {
+                // Not implemented as mentioned
+            }
+
+            override fun onItemSelected(position: Int) {
+                val itemMessage = "Selected Image $position"
+                Toast.makeText(requireContext(), itemMessage, Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
 
     private fun getAndDisplayPopularItems() {
         val flowerRef: DatabaseReference = database.reference.child("list")
