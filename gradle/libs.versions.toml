@@ -8,6 +8,7 @@ facebookAndroidSdk = "18.0.3"
 facebookLogin = "latest.version"
 facebookLoginVersion = "18.0.3"
 firebaseBom = "33.13.0"
+firebaseFirestore = "25.1.4"
 glide = "4.16.0"
 imageslideshow = "0.1.2"
 kotlin = "2.1.0"
@@ -46,7 +47,9 @@ facebook-login-v1803 = { module = "com.facebook.android:facebook-login", version
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 imageslideshow = { module = "com.github.denzcoskun:ImageSlideshow", version.ref = "imageslideshow" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

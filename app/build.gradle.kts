@@ -90,6 +90,11 @@ dependencies {
     // thu vien ZXing
     implementation (libs.core)
 
+    implementation (libs.firebase.firestore)
+
+    implementation (libs.google.firebase.firestore)
+
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.example.jsflower.Fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.denzcoskun.imageslider.constants.ScaleTypes
 import com.denzcoskun.imageslider.interfaces.ItemClickListener
 import com.denzcoskun.imageslider.models.SlideModel
+import com.example.jsflower.ChatActivity
 import com.example.jsflower.Model.BannerModel
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.MenuItem
@@ -26,6 +28,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.util.Date
 import kotlin.math.min
+
 
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
@@ -52,6 +55,11 @@ class HomeFragment : Fragment() {
 
         // Lay du lieu categories tu database
         setupCategoriesRecyclerView()
+
+        binding.fabChat.setOnClickListener {
+            val intent = Intent(activity, ChatActivity::class.java)
+            startActivity(intent)
+        }
 
         return binding.root
     }

@@ -174,7 +174,7 @@ class PayOutActivity : AppCompatActivity() {
     }
 
     private fun addOrderToHistory(orderDetails: OrderDetails) {
-        databaseReference.child("user").child(userId).child("BuyHistory")
+        databaseReference.child("users").child(userId).child("BuyHistory")
             .child(orderDetails.itemPushKey!!).setValue(orderDetails)
     }
 
@@ -231,7 +231,7 @@ class PayOutActivity : AppCompatActivity() {
 
     private fun setUserData() {
         val user = auth.currentUser ?: return
-        val userRef = databaseReference.child("user").child(user.uid)
+        val userRef = databaseReference.child("users").child(user.uid)
 
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -258,7 +258,7 @@ class PayOutActivity : AppCompatActivity() {
             "phone" to binding.etPhone.text.toString().trim()
         )
 
-        databaseReference.child("user").child(userId).updateChildren(updatedData)
+        databaseReference.child("users").child(userId).updateChildren(updatedData)
             .addOnSuccessListener {
                 Toast.makeText(this, "Cập nhật thành công", Toast.LENGTH_SHORT).show()
                 setEditTextsEnabled(false)
@@ -272,7 +272,7 @@ class PayOutActivity : AppCompatActivity() {
     }
 
     private fun clearCart(userId: String) {
-        databaseReference.child("user").child(userId).child("CartItems")
+        databaseReference.child("users").child(userId).child("CartItems")
             .removeValue()
             .addOnSuccessListener {
                 Log.d("PayOut", "Đã xóa giỏ hàng sau khi đặt hàng")
@@ -287,7 +287,7 @@ class PayOutActivity : AppCompatActivity() {
         productKeyQuantityMap: MutableMap<String, Int>,
         paymentReceived: Boolean
     ) {
-        val ordersRef = databaseReference.child("user").child(userId).child("orders").child(orderKey)
+        val ordersRef = databaseReference.child("users").child(userId).child("orders").child(orderKey)
 
         val orderItems = ArrayList<Map<String, Any>>()
         for (i in flowerItemName.indices) {

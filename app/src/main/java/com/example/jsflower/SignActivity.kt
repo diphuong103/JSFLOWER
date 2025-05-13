@@ -19,11 +19,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import java.util.Date
 
@@ -32,6 +34,7 @@ class SignActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
     private lateinit var googleSignInClient: GoogleSignInClient
+    private val db = FirebaseFirestore.getInstance()
 
     private var isPasswordVisible = false
     private val binding: ActivitySignBinding by lazy {
@@ -105,7 +108,11 @@ class SignActivity : AppCompatActivity() {
                     createAccount(username, email, password)
                 }
             } else {
-                Toast.makeText(this, "Lỗi khi kiểm tra email: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Lỗi khi kiểm tra email: ${task.exception?.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -116,6 +123,7 @@ class SignActivity : AppCompatActivity() {
                 Toast.makeText(this, "Tạo tài khoản thành công", Toast.LENGTH_SHORT).show()
                 val currentDate = Date() // Lưu thời gian hiện tại
                 saveUserData(username, email, currentDate)
+                registerUser(email, password, username, "Cập nhật SĐT")
                 updateUi(auth.currentUser)
             } else {
                 Toast.makeText(this, "Tạo tài khoản thất bại", Toast.LENGTH_SHORT).show()
@@ -127,7 +135,7 @@ class SignActivity : AppCompatActivity() {
     private fun saveUserData(username: String, email: String, date: Date) {
         val user = UserModel(username, email, createDate = date.toString())
         val userId = auth.currentUser!!.uid
-        database.child("user").child(userId).setValue(user)
+        database.child("users").child(userId).setValue(user)
             .addOnSuccessListener {
                 Log.d("Firebase", "Lưu user thành công")
             }
@@ -145,7 +153,7 @@ class SignActivity : AppCompatActivity() {
         val userId = user?.uid
 
         userId?.let {
-            database.child("user").child(it).setValue(userModel)
+            database.child("users").child(it).setValue(userModel)
                 .addOnSuccessListener {
                     Log.d("Firebase", "Lưu user Google thành công")
                 }
@@ -171,17 +179,23 @@ class SignActivity : AppCompatActivity() {
 
                 auth.signInWithCredential(credential).addOnCompleteListener { authTask ->
                     if (authTask.isSuccessful) {
-                        Toast.makeText(this, "Đăng nhập Google thành công", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Đăng nhập Google thành công", Toast.LENGTH_SHORT)
+                            .show()
                         saveUserDataGG(auth.currentUser)
                         updateUi(auth.currentUser)
                     } else {
-                        Log.e("SignActivity", "Firebase Auth thất bại: ${authTask.exception?.message}")
-                        Toast.makeText(this, "Đăng nhập Firebase thất bại", Toast.LENGTH_SHORT).show()
+                        Log.e(
+                            "SignActivity",
+                            "Firebase Auth thất bại: ${authTask.exception?.message}"
+                        )
+                        Toast.makeText(this, "Đăng nhập Firebase thất bại", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             } catch (e: ApiException) {
                 Log.e("SignActivity", "Google sign-in failed: ${e.statusCode} - ${e.message}")
-                Toast.makeText(this, "Lỗi đăng nhập Google: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Lỗi đăng nhập Google: ${e.statusCode}", Toast.LENGTH_SHORT)
+                    .show()
             }
         } else {
             Toast.makeText(this, "Đã huỷ chọn tài khoản Google", Toast.LENGTH_SHORT).show()
@@ -202,7 +216,8 @@ class SignActivity : AppCompatActivity() {
                     isPasswordVisible = !isPasswordVisible
 
                     if (isPasswordVisible) {
-                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                        editText.inputType =
+                            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                         editText.transformationMethod = null
                         editText.setCompoundDrawablesWithIntrinsicBounds(
                             ContextCompat.getDrawable(this, R.drawable.lock),
@@ -211,7 +226,8 @@ class SignActivity : AppCompatActivity() {
                             null
                         )
                     } else {
-                        editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+                        editText.inputType =
+                            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                         editText.transformationMethod = PasswordTransformationMethod.getInstance()
                         editText.setCompoundDrawablesWithIntrinsicBounds(
                             ContextCompat.getDrawable(this, R.drawable.lock),
@@ -230,6 +246,74 @@ class SignActivity : AppCompatActivity() {
                 false
             }
         }
+    }
+
+    // Trong Activity đăng ký
+    private fun registerUser(email: String, password: String, name: String, phone: String) {
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    // Lưu thông tin người dùng
+                    val user = HashMap<String, Any>()
+                    user["name"] = name
+                    user["email"] = email
+                    user["phoneNumber"] = phone
+                    user["role"] = "client"
+                    user["isOnline"] = false
+                    user["profileImageUrl"] = ""
+                    user["createdAt"] = Timestamp.now()
+
+                    db.collection("users")
+                        .document(userId)
+                        .set(user)
+                        .addOnSuccessListener {
+                            // Khởi tạo chat
+                            initializeChat(userId)
+
+                        }
+                        .addOnFailureListener { e ->
+                            Toast.makeText(
+                                this,
+                                "Failed to save user data: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Registration failed: ${task.exception?.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+    }
+
+    private fun initializeChat(userId: String) {
+        // Khởi tạo tài liệu chat
+        val chatSummary = HashMap<String, Any>()
+        chatSummary["lastMessage"] = "Chào mừng đến với JSFlower! Bạn cần giúp gì không?"
+        chatSummary["lastMessageTime"] = Timestamp.now()
+        chatSummary["lastSender"] = "admin"
+        chatSummary["unreadCount"] = 1
+
+        db.collection("chats")
+            .document(userId)
+            .set(chatSummary)
+            .addOnSuccessListener {
+                // Thêm tin nhắn chào mừng
+                val welcomeMessage = HashMap<String, Any>()
+                welcomeMessage["sender"] = "admin"
+                welcomeMessage["text"] = "Chào mừng đến với JSFlower! Bạn cần giúp gì không?"
+                welcomeMessage["timestamp"] = System.currentTimeMillis()
+                welcomeMessage["type"] = "text"
+
+                db.collection("chats")
+                    .document(userId)
+                    .collection("messages")
+                    .add(welcomeMessage)
+            }
     }
 
 }

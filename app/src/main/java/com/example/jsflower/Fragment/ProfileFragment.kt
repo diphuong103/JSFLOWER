@@ -107,7 +107,7 @@ class ProfileFragment : Fragment() {
     private fun loadUserData() {
         val user = auth.currentUser ?: return
         val userId = user.uid
-        database.child("user").child(userId)
+        database.child("users").child(userId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val name = snapshot.child("name").getValue(String::class.java) ?: ""
@@ -170,7 +170,7 @@ class ProfileFragment : Fragment() {
                 "address" to address
             )
 
-            database.child("user").child(userId).updateChildren(userMap)
+            database.child("users").child(userId).updateChildren(userMap)
                 .addOnSuccessListener {
                     Toast.makeText(requireContext(), "Cập nhật thành công", Toast.LENGTH_SHORT)
                         .show()
@@ -251,7 +251,7 @@ class ProfileFragment : Fragment() {
             "imageUrl" to imageUrl // Lưu URL ảnh vào Firebase
         )
 
-        database.child("user").child(userId).updateChildren(userMap)
+        database.child("users").child(userId).updateChildren(userMap)
             .addOnSuccessListener {
                 Toast.makeText(
                     requireContext(),

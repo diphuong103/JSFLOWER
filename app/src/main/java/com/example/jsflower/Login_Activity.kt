@@ -168,7 +168,7 @@ class Login_Activity : AppCompatActivity() {
         val uid = user?.uid ?: return
         val userModel = UserModel(name, email)
 
-        database.child("user").child(uid).setValue(userModel)
+        database.child("users").child(uid).setValue(userModel)
             .addOnSuccessListener { Log.d("Firebase", "Lưu user Google thành công") }
             .addOnFailureListener { Log.e("Firebase", "Lỗi lưu user Google", it) }
     }
@@ -179,7 +179,7 @@ class Login_Activity : AppCompatActivity() {
         val uid = user?.uid ?: return
         val userModel = UserModel(name, email)
 
-        database.child("user").child(uid).setValue(userModel)
+        database.child("users").child(uid).setValue(userModel)
             .addOnSuccessListener { Log.d("Firebase", "Lưu user Facebook thành công") }
             .addOnFailureListener { Log.e("Firebase", "Lỗi lưu user Facebook", it) }
     }

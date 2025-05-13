@@ -331,7 +331,7 @@ class DetailsActivity : AppCompatActivity() {
         }
 
         // Get user information
-        val userRef = database.reference.child("user").child(userId)
+        val userRef = database.reference.child("users").child(userId)
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val userName =
@@ -449,7 +449,7 @@ class DetailsActivity : AppCompatActivity() {
             flowerKey = flowerKey
         )
         // Lưu dữ liệu cartItem vào Firebase
-        database.child("user").child(userId).child("CartItems").push().setValue(cartItem)
+        database.child("users").child(userId).child("CartItems").push().setValue(cartItem)
             .addOnSuccessListener {
                 Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT)
                     .show()
