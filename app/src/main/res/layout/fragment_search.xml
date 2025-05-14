@@ -5,14 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".Fragment.SearchFragment">
+    tools:context="com.example.jsflower.Fragment.SearchFragment">
 
     <!-- Title -->
     <TextView
         android:id="@+id/textView14"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Search"
+        android:text="Tìm kiếm"
         android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginTop="16dp"
@@ -37,16 +37,169 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- "Menu" Label -->
+    <!-- Filters Section -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/filtersCardView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/searchView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- Filter Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bộ lọc tìm kiếm"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Category Filter -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Danh mục:"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/categoryChipGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="false"
+                    app:selectionRequired="false" />
+            </HorizontalScrollView>
+
+            <!-- Price Range Filter -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Khoảng giá:"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/minPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0đ"
+                    android:layout_gravity="center_vertical" />
+
+                <SeekBar
+                    android:id="@+id/priceRangeSlider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/maxPriceText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1,000,000đ"
+                    android:layout_gravity="center_vertical" />
+            </LinearLayout>
+
+            <!-- Apply Filter Button -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <Button
+                    android:id="@+id/resetFiltersButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Xóa bộ lọc"
+                    android:layout_marginEnd="12dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+                <Button
+                    android:id="@+id/applyFiltersButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Áp dụng"
+                    style="@style/Widget.MaterialComponents.Button" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Filter Toggle Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/toggleFiltersButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hiện bộ lọc"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="16dp"
+        app:icon="@drawable/filter_list_svgrepo_com"
+        app:iconGravity="textStart"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:layout_constraintTop_toBottomOf="@id/filtersCardView"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Active Filters Recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/activeFiltersRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="horizontal"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toTopOf="@id/toggleFiltersButton"
+        app:layout_constraintBottom_toBottomOf="@id/toggleFiltersButton"
+        app:layout_constraintStart_toEndOf="@id/toggleFiltersButton"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Results Header -->
     <TextView
         android:id="@+id/textView15"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Menu"
+        android:text="Kết quả tìm kiếm"
         android:textStyle="bold"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/searchView"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="16sp"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="16dp"
+        app:layout_constraintTop_toBottomOf="@id/toggleFiltersButton"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Results Count -->
+    <TextView
+        android:id="@+id/resultCountText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 sản phẩm"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintTop_toTopOf="@id/textView15"
+        app:layout_constraintBottom_toBottomOf="@id/textView15"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- RecyclerView -->
@@ -54,7 +207,10 @@
         android:id="@+id/menuRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/textView15"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

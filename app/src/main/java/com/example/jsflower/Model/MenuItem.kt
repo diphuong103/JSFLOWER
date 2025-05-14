@@ -6,7 +6,10 @@ data class MenuItem(
     val flowerDescription: String? = null,
     val flowerImage: String? = null,
     val flowerIngredient: String? = null,
+    val flowerCategory: String? = null,      // Thêm trường này
+    val flowerQuantity: String? = null,      // Thêm trường này
+    val tags: String? = null,
     var key: String = "",
     var categoryId: String? = null,
-    val tags: String ?=null
+    var categoryName: String? = null,
 )

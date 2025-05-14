@@ -506,6 +506,9 @@ class DetailsActivity : AppCompatActivity() {
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
         val adapter = MenuAdapter(subsetMenuItems, this@DetailsActivity)
+        {
+            addItemToCart(menuItem = it)
+        }
 
         // Đảm bảo hiển thị phù hợp với layout item
         val layoutManager = GridLayoutManager(this, 2)
@@ -526,5 +529,34 @@ class DetailsActivity : AppCompatActivity() {
         val vndFormat = NumberFormat.getCurrencyInstance(localeVN)
         vndFormat.currency = currencyVN
         return vndFormat.format(amount)
+    }
+
+    private fun addItemToCart(menuItem: MenuItem) {
+        val userId = auth.currentUser?.uid ?: ""
+        if (userId.isEmpty()) {
+            Toast.makeText(this, "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_SHORT)
+                .show()
+            return
+        }
+
+        val cartItem = CartItems(
+            flowerName = menuItem.flowerName ?: "",
+            flowerPrice = menuItem.flowerPrice ?: "",
+            flowerDescription = menuItem.flowerDescription ?: "",
+            flowerImage = menuItem.flowerImage ?: "",
+            quantity = 1,
+            flowerIngredient = menuItem.flowerIngredient,
+            flowerKey = menuItem.key
+        )
+
+        database.reference.child("users").child(userId).child("CartItems").push().setValue(cartItem)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công!", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Thêm giỏ hàng thất bại: ${it.message}", Toast.LENGTH_SHORT)
+                    .show()
+            }
     }
 }

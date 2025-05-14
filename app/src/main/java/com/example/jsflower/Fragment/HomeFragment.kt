@@ -15,6 +15,7 @@ import com.denzcoskun.imageslider.interfaces.ItemClickListener
 import com.denzcoskun.imageslider.models.SlideModel
 import com.example.jsflower.ChatActivity
 import com.example.jsflower.Model.BannerModel
+import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.ChatModel
 import com.example.jsflower.Model.MenuItem
@@ -224,6 +225,8 @@ class HomeFragment : Fragment() {
                 for (flowerSnapshot in snapshot.children) {
                     val menuItem = flowerSnapshot.getValue(MenuItem::class.java)
                     menuItem?.let {
+                        // Set the key for each menu item
+                        it.key = flowerSnapshot.key ?: ""
                         menuItems.add(it)
                     }
                 }
@@ -260,10 +263,37 @@ class HomeFragment : Fragment() {
     }
 
     private fun addToCart(menuItem: MenuItem) {
-        // Handle adding to cart
-        Toast.makeText(requireContext(), "Thêm vào giỏ hàng: ${menuItem.flowerName}", Toast.LENGTH_SHORT).show()
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-        // Optionally, save to SharedPreferences or Firebase for cart persistence
+        if (userId == null) {
+            Toast.makeText(requireContext(), "Vui lòng đăng nhập để thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Create CartItems object
+        val cartItem = CartItems(
+            menuItem.flowerName.toString(),
+            menuItem.flowerPrice.toString(),
+            menuItem.flowerDescription.toString(),
+            menuItem.flowerImage.toString(),
+            1, // Item ID is set to 1 as in the DetailActivity
+            menuItem.flowerIngredient,
+            quantity = 1,
+            flowerKey = menuItem.key
+        )
+
+        // Save to Firebase
+        val database = FirebaseDatabase.getInstance().reference
+        database.child("users").child(userId).child("CartItems").push().setValue(cartItem)
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(),
+                    "Thêm ${menuItem.flowerName} vào giỏ hàng thành công <3",
+                    Toast.LENGTH_SHORT).show()
+            }.addOnFailureListener {
+                Toast.makeText(requireContext(),
+                    "Thêm vào giỏ hàng thất bại -_-",
+                    Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun setupCategoriesRecyclerView() {
@@ -354,6 +384,8 @@ class HomeFragment : Fragment() {
                             override fun onDataChange(productDataSnapshot: DataSnapshot) {
                                 val menuItem = productDataSnapshot.getValue(MenuItem::class.java)
                                 menuItem?.let {
+                                    // Ensure we set the key for the item
+                                    it.key = productId
                                     categoryProducts.add(it)
                                 }
 
