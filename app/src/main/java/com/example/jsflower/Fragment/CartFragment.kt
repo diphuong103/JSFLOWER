@@ -97,7 +97,7 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
         }
 
 
-        val flowerRef = database.reference.child("user").child(userId).child("CartItems")
+        val flowerRef = database.reference.child("users").child(userId).child("CartItems")
 
         // Clear old data
         flowerNames.clear()
@@ -208,7 +208,7 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
         val itemName = flowerNames[position]
 
         val flowerRef = database.reference
-            .child("user")
+            .child("users")
             .child(userId)
             .child("CartItems")
             .child(itemId)
@@ -228,7 +228,7 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
 
         val itemId = itemIds[position]
         val flowerRef = database.reference
-            .child("user")
+            .child("users")
             .child(userId)
             .child("CartItems")
             .child(itemId)

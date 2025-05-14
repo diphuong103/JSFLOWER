@@ -56,7 +56,7 @@ class HistoryFragment : Fragment() {
             val itemPushKey = canceledOrder.itemPushKey ?: return@setOnClickListener
 
             val orderRef = database.reference.child("OrderDetails").child(itemPushKey)
-            val historyRef = database.reference.child("user").child(userId).child("BuyHistory")
+            val historyRef = database.reference.child("users").child(userId).child("BuyHistory")
                 .child(itemPushKey)
             val cancelRef = database.reference.child("CanceledOrder").child(itemPushKey)
 
@@ -85,7 +85,7 @@ class HistoryFragment : Fragment() {
 
     private fun setupBuyHistoryListener() {
         binding.rencenBuyItem.visibility = View.INVISIBLE
-        val buyItemRef = database.reference.child("user").child(userId).child("BuyHistory")
+        val buyItemRef = database.reference.child("users").child(userId).child("BuyHistory")
         val sortingQuery = buyItemRef.orderByChild("currentTime")
 
         buyHistoryListener = object : ValueEventListener {
@@ -205,7 +205,7 @@ class HistoryFragment : Fragment() {
                 )
 
                 val userId = auth.currentUser?.uid ?: ""
-                val cartItemRef = database.getReference("user/$userId/CartItems")
+                val cartItemRef = database.getReference("users/$userId/CartItems")
 
                 cartItemRef.push().setValue(cartItem)
                     .addOnSuccessListener {
@@ -248,7 +248,7 @@ class HistoryFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         try {
-            val buyItemRef = database.reference.child("user").child(userId).child("BuyHistory")
+            val buyItemRef = database.reference.child("users").child(userId).child("BuyHistory")
             val sortingQuery = buyItemRef.orderByChild("currentTime")
             sortingQuery.removeEventListener(buyHistoryListener)
 
