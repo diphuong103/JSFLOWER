@@ -16,11 +16,13 @@ import com.denzcoskun.imageslider.models.SlideModel
 import com.example.jsflower.ChatActivity
 import com.example.jsflower.Model.BannerModel
 import com.example.jsflower.Model.CategoryModel
+import com.example.jsflower.Model.ChatModel
 import com.example.jsflower.Model.MenuItem
 import com.example.jsflower.R
 import com.example.jsflower.adaptar.CategoryAdapter
 import com.example.jsflower.adaptar.PopularAdapter
 import com.example.jsflower.databinding.FragmentHomeBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -35,6 +37,9 @@ class HomeFragment : Fragment() {
     private lateinit var database: FirebaseDatabase
     private lateinit var menuItems: MutableList<MenuItem>
     private lateinit var categoryList: ArrayList<CategoryModel>
+    private lateinit var messagesListener: ValueEventListener
+    private var chatRef: DatabaseReference? = null
+    private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: "default_user_id"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,12 +61,75 @@ class HomeFragment : Fragment() {
         // Lay du lieu categories tu database
         setupCategoriesRecyclerView()
 
+        // Setup chat button click listener and notification dot
+        setupChatButton()
+
+        // Set up chat messages listener for notification
+        setupChatNotificationListener()
+
+        return binding.root
+    }
+
+    private fun setupChatButton() {
         binding.fabChat.setOnClickListener {
             val intent = Intent(activity, ChatActivity::class.java)
             startActivity(intent)
+
+            // Reset notification dot when opening chat
+            binding.notificationDot.visibility = View.VISIBLE
+
+            // Mark messages as read in Firebase
+            markMessagesAsRead()
+        }
+    }
+
+    private fun markMessagesAsRead() {
+        val messagesRef = database.reference.child("chats").child(currentUserId).child("messages")
+        messagesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (messageSnapshot in snapshot.children) {
+                    val message = messageSnapshot.getValue(ChatModel::class.java)
+                    if (message != null && message.userId == "admin" && !message.isRead) {
+                        messageSnapshot.ref.child("isRead").setValue(true)
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("HomeFragment", "Error marking messages as read: ${error.message}")
+            }
+        })
+    }
+
+    private fun setupChatNotificationListener() {
+        chatRef = database.reference.child("chats").child(currentUserId).child("messages")
+
+        messagesListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var hasUnreadAdminMessages = false
+
+                for (messageSnapshot in snapshot.children) {
+                    val message = messageSnapshot.getValue(ChatModel::class.java)
+                    if (message != null && message.userId == "admin" && !message.isRead) {
+                        hasUnreadAdminMessages = true
+                        break
+                    }
+                }
+
+                // Update notification dot visibility
+                if (isAdded && context != null) {
+                    activity?.runOnUiThread {
+                        binding.notificationDot.visibility = if (hasUnreadAdminMessages) View.VISIBLE else View.GONE
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("HomeFragment", "Chat messages listener cancelled: ${error.message}")
+            }
         }
 
-        return binding.root
+        chatRef?.addValueEventListener(messagesListener)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -140,6 +208,11 @@ class HomeFragment : Fragment() {
         })
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Remove listeners to prevent memory leaks
+        chatRef?.removeEventListener(messagesListener)
+    }
 
     private fun getAndDisplayPopularItems() {
         val flowerRef: DatabaseReference = database.reference.child("list")

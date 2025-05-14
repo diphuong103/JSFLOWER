@@ -7,9 +7,10 @@
     <!-- Tin nhắn của người khác -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/receiverLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="80dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -18,6 +19,7 @@
             android:id="@+id/receiverAvatar"
             android:layout_width="36dp"
             android:layout_height="36dp"
+            android:layout_marginStart="8dp"
             android:src="@drawable/logo"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -49,8 +51,10 @@
             <!-- Image message for receiver -->
             <ImageView
                 android:id="@+id/receiverImageView"
-                android:layout_width="wrap_content"
+                android:layout_width="240dp"
                 android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
                 android:visibility="gone" />
         </androidx.cardview.widget.CardView>
 
@@ -70,9 +74,10 @@
     <!-- Tin nhắn của người dùng -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/senderLayout"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="80dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -82,6 +87,7 @@
             android:id="@+id/senderMessageCard"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             app:cardBackgroundColor="#A40F0F"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp"
@@ -103,8 +109,10 @@
             <!-- Image message for sender -->
             <ImageView
                 android:id="@+id/senderImageView"
-                android:layout_width="wrap_content"
+                android:layout_width="240dp"
                 android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
                 android:visibility="gone" />
         </androidx.cardview.widget.CardView>
 

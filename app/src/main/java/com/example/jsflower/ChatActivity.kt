@@ -23,7 +23,6 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var database: DatabaseReference
 
     private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: "default_user_id"
-    private var chatId: String = "" // Chat ID will be set dynamically
     private var selectedFileUri: Uri? = null
 
     private val imgBBUploadService = ImgBBUploadService()
@@ -34,9 +33,6 @@ class ChatActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         database = FirebaseDatabase.getInstance().reference
-
-        // Tạo một ID chat duy nhất cho cuộc trò chuyện
-        chatId = intent.getStringExtra("CHAT_ID") ?: "default_chat_id"
 
         // Định nghĩa Adapter và RecyclerView
         messageAdapter = ChatAdapter(messages, currentUserId)
@@ -49,6 +45,7 @@ class ChatActivity : AppCompatActivity() {
         binding.sendButton.setOnClickListener { sendMessageOrImage() }
 
         loadMessages()
+        markMessagesAsRead()
     }
 
     private fun openGallery() {
@@ -57,8 +54,9 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun loadMessages() {
-        // Lắng nghe tin nhắn từ Firebase
-        database.child("chats").child(chatId).child("messages")
+        // Lắng nghe tin nhắn từ Firebase - sắp xếp theo timestamp
+        database.child("chats").child(currentUserId).child("messages")
+            .orderByChild("timestamp")
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     messages.clear()
@@ -80,6 +78,26 @@ class ChatActivity : AppCompatActivity() {
             })
     }
 
+    private fun markMessagesAsRead() {
+        database.child("chats").child(currentUserId).child("messages")
+            .orderByChild("isRead")
+            .equalTo(false)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (messageSnapshot in snapshot.children) {
+                        val message = messageSnapshot.getValue(ChatModel::class.java)
+                        if (message != null && message.userId == "admin") {
+                            messageSnapshot.ref.child("isRead").setValue(true)
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(this@ChatActivity, "Failed to update message status", Toast.LENGTH_SHORT).show()
+                }
+            })
+    }
+
     private fun sendMessageOrImage() {
         val messageText = binding.messageInput.text.toString().trim()
         if (selectedFileUri != null) {
@@ -91,15 +109,16 @@ class ChatActivity : AppCompatActivity() {
 
     private fun sendTextMessage(text: String) {
         val chatMessage = ChatModel(
-            userId = "client",
-            senderId = currentUserId,
+            userId = "client", // Role là client
+            senderId = currentUserId, // ID của user hiện tại
             message = text,
             imageUrl = "",
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            isRead = false  // New message from client
         )
 
         // Lưu tin nhắn vào Firebase
-        database.child("chats").child(chatId).child("messages").push().setValue(chatMessage)
+        database.child("chats").child(currentUserId).child("messages").push().setValue(chatMessage)
             .addOnSuccessListener {
                 binding.messageInput.text.clear()
             }
@@ -114,14 +133,15 @@ class ChatActivity : AppCompatActivity() {
             imgBBUploadService.uploadImage(this, uri, object : ImgBBUploadService.UploadCallback {
                 override fun onSuccess(imageUrl: String) {
                     val chatMessage = ChatModel(
-                        userId = "client",
-                        senderId = currentUserId,
+                        userId = "client", // Role là client
+                        senderId = currentUserId, // ID của user hiện tại
                         message = "",
                         imageUrl = imageUrl,
-                        timestamp = System.currentTimeMillis()
+                        timestamp = System.currentTimeMillis(),
+                        isRead = false  // New message from client
                     )
 
-                    database.child("chats").child(chatId).child("messages").push().setValue(chatMessage)
+                    database.child("chats").child(currentUserId).child("messages").push().setValue(chatMessage)
                         .addOnSuccessListener {
                             binding.messageInput.text.clear()
                             selectedFileUri = null
@@ -149,5 +169,11 @@ class ChatActivity : AppCompatActivity() {
                 binding.messageInput.setText("Image selected")
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Mark messages as read when returning to chat
+        markMessagesAsRead()
     }
 }

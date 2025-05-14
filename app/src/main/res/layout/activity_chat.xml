@@ -81,6 +81,8 @@
     </androidx.appcompat.widget.Toolbar>
 
     <!-- Danh sách tin nhắn -->
+
+    <!-- Khung nhập tin nhắn -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/messagesRecyclerView"
         android:layout_width="match_parent"
@@ -90,11 +92,12 @@
         android:paddingBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/messageInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/chatToolbar"
+        app:layout_constraintVertical_bias="0.0"
         tools:listitem="@layout/item_message" />
 
-    <!-- Khung nhập tin nhắn -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/messageInputLayout"
         android:layout_width="match_parent"
@@ -112,7 +115,7 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="8dp"
-            android:src="@drawable/attach_attachment_clip_svgrepo_com"
+            android:src="@drawable/image_svgrepo_com"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
