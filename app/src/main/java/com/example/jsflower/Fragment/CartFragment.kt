@@ -26,13 +26,12 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
     private lateinit var userId: String
 
     private var flowerNames = mutableListOf<String>()
-    private var flowerPrices = mutableListOf<String>()
+    private var flowerPrices = mutableListOf<String>() // This will now store discounted prices when available
     private var flowerDescriptions = mutableListOf<String>()
     private var flowerImagesUri = mutableListOf<String>()
     private var flowerIngredients = mutableListOf<String>()
     private var quantity = mutableListOf<Int>()
     private var itemIds = mutableListOf<String>()
-
     private var flowerKeys = mutableListOf<String>()
 
     override fun onCreateView(
@@ -66,7 +65,7 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
                     flowerImagesUri,
                     flowerIngredients,
                     updatedQuantities,
-                    flowerKeys  // Truyền flowerKeys thay vì itemIds
+                    flowerKeys
                 )
             } else {
                 Toast.makeText(context, "Giỏ hàng trống", Toast.LENGTH_SHORT).show()
@@ -96,7 +95,6 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
             return
         }
 
-
         val flowerRef = database.reference.child("users").child(userId).child("CartItems")
 
         // Clear old data
@@ -107,6 +105,7 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
         flowerIngredients.clear()
         quantity.clear()
         itemIds.clear()
+        flowerKeys.clear()
 
         flowerRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -125,7 +124,11 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
                         !cartItem.flowerImage.isNullOrEmpty()) {
 
                         flowerNames.add(cartItem.flowerName!!)
-                        flowerPrices.add(cartItem.flowerPrice!!)
+
+                        // Use discounted price if available, otherwise use the regular price
+                        val priceToShow = cartItem.discountedPrice ?: cartItem.flowerPrice!!
+                        flowerPrices.add(priceToShow)
+
                         flowerDescriptions.add(cartItem.flowerDescription ?: "")
                         flowerImagesUri.add(cartItem.flowerImage!!)
                         flowerIngredients.add(cartItem.flowerIngredient ?: "")
@@ -133,7 +136,6 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
 
                         // Lưu cartItem key (để xóa item) và flowerKey (để truy xuất sản phẩm gốc)
                         itemIds.add(itemId)
-                        // Đảm bảo lưu flowerKey từ CartItems
                         flowerKeys.add(cartItem.flowerKey ?: "")
                     }
                 }
@@ -183,20 +185,19 @@ class CartFragment : Fragment(), CartAdapter.CartItemActionListener {
         flowerImage: MutableList<String>,
         flowerIngredients: MutableList<String>,
         flowerQuantities: MutableList<Int>,
-        flowerKeys: MutableList<String>  // Sử dụng flowerKeys thay vì flowerKey
+        flowerKeys: MutableList<String>
     ) {
         val intent = Intent(requireContext(), PayOutActivity::class.java).apply {
             putExtra("FlowerItemName", ArrayList(flowerName))
-            putExtra("FlowerItemPrice", ArrayList(flowerPrice))
+            putExtra("FlowerItemPrice", ArrayList(flowerPrice)) // Already contains discounted prices
             putExtra("FlowerItemImage", ArrayList(flowerImage))
             putExtra("FlowerItemDescription", ArrayList(flowerDescription))
             putExtra("FlowerItemIngredient", ArrayList(flowerIngredients))
             putExtra("FlowerItemQuantities", ArrayList(flowerQuantities))
-            putExtra("FlowerItemKey", ArrayList(flowerKeys))  // Truyền đúng flowerKeys
+            putExtra("FlowerItemKey", ArrayList(flowerKeys))
         }
         startActivity(intent)
     }
-
 
     override fun onCartItemDelete(position: Int) {
         if (position < 0 || position >= itemIds.size) {

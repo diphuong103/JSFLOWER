@@ -32,7 +32,7 @@
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="12dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                app:cardElevation="0dp">
 
                 <com.denzcoskun.imageslider.ImageSlider
                     android:id="@+id/image_slider"
@@ -40,6 +40,7 @@
                     android:layout_height="180dp"
                     app:iss_auto_cycle="true"
                     app:iss_delay="3000"
+                    android:background="@color/white"
                     app:iss_no_dots="false"
                     app:iss_period="2000"
                     app:iss_text_align="CENTER" />

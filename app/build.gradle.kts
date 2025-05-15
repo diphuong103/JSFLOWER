@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.firebase.database)
     implementation(libs.play.services.cast.framework)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -94,6 +95,12 @@ dependencies {
 
     implementation (libs.google.firebase.firestore)
 
+
+//    implementation (libs.play.services.maps)
+//    implementation (libs.play.services.location) // nếu muốn lấy vị trí hiện tại
+
+    // Thư viện map
+    implementation (libs.osmdroid.android)
 
 
 

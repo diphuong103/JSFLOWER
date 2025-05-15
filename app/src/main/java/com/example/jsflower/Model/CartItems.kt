@@ -8,7 +8,8 @@ data class CartItems(
     val flowerQuantity: Int? = 1,
     val flowerIngredient: String? = null,
     val quantity: Int? = 1,
-    val flowerKey: String? = null
+    val flowerKey: String? = null,
+    var discountedPrice: String? = null
 ){
 
 }

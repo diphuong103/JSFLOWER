@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true"
+    tools:context=".AddEditAddressActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Địa chỉ -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Địa chỉ"
+            android:textSize="16sp"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nhập địa chỉ đầy đủ"
+            android:inputType="textPostalAddress"
+            android:minLines="2"
+            android:gravity="top"
+            android:layout_marginBottom="8dp"
+            tools:ignore="LabelFor" />
+
+        <!-- Nút chọn trên bản đồ -->
+        <Button
+            android:id="@+id/btnSelectOnMap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chọn trên bản đồ"
+            android:layout_marginBottom="8dp" />
+
+        <!-- MapView OpenStreetMap, mặc định 200dp cao -->
+        <org.osmdroid.views.MapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:visibility="gone"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Checkbox địa chỉ mặc định -->
+        <CheckBox
+            android:id="@+id/cbDefaultAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Đặt làm địa chỉ mặc định"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Nút lưu -->
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lưu địa chỉ" />
+
+    </LinearLayout>
+
+</ScrollView>

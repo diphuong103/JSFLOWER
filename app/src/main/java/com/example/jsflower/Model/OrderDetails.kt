@@ -3,9 +3,8 @@ package com.example.jsflower.Model
 import android.os.Parcel
 import android.os.Parcelable
 import java.io.Serializable
-import java.util.ArrayList
 
-class OrderDetails() : Serializable {
+class OrderDetails() : Parcelable {
     var userUid: String? = null
     var userName: String? = null
     var flowerNames: ArrayList<String>? = null
@@ -19,56 +18,50 @@ class OrderDetails() : Serializable {
     var paymentReceived: Boolean = false
     var itemPushKey: String? = null
     var currentTime: Long = 0
-    var flowerKey: String?= null
+    var flowerKey: String? = null
+    val status: String = "pending" // Made status non-nullable and initialized
 
+    // Secondary constructor
     constructor(
-        userId: String,
-        name: String,
-        flowerItemName: ArrayList<String>,
-        flowerItemPrice: ArrayList<String>,
-        flowerItemImage: ArrayList<String>,
-        flowerItemQuantities: ArrayList<Int>,
+        userUid: String,
+        userName: String,
+        flowerNames: ArrayList<String>,
+        flowerPrices: ArrayList<String>,
+        flowerImages: ArrayList<String>,
+        flowerQuantities: ArrayList<Int>,
         address: String,
-        total: Double,
-        phone: String,
-        time: Long,
+        totalPrice: Double,
+        phoneNumber: String,
+        currentTime: Long,
         itemPushKey: String?,
         orderAccepted: Boolean,
         paymentReceived: Boolean,
         flowerKey: String?
-    ) : this() {
-        this.userUid = userId
-        this.userName = name
-        this.flowerNames = flowerItemName
-        this.flowerPrices = flowerItemPrice
-        this.flowerImages = flowerItemImage
-        this.flowerQuantities = flowerItemQuantities
+    ) : this() { // Corrected constructor delegation
+        this.userUid = userUid
+        this.userName = userName
+        this.flowerNames = flowerNames
+        this.flowerPrices = flowerPrices
+        this.flowerImages = flowerImages
+        this.flowerQuantities = flowerQuantities
         this.address = address
-        this.totalPrice = total
-        this.phoneNumber = phone
-        this.currentTime = time  // Fixed to use the parameter
+        this.totalPrice = totalPrice
+        this.phoneNumber = phoneNumber
+        this.currentTime = currentTime
         this.itemPushKey = itemPushKey
         this.orderAccepted = orderAccepted
-        this.paymentReceived = paymentReceived  // Fixed variable name
+        this.paymentReceived = paymentReceived
         this.flowerKey = flowerKey
     }
 
-    // Constructor for Parcelable
-    private constructor(parcel: Parcel) : this() {
+    // Parcelable implementation
+    constructor(parcel: Parcel) : this() { // Changed this() to this()
         userUid = parcel.readString()
         userName = parcel.readString()
-        flowerNames = ArrayList<String>().apply {
-            parcel.readStringList(this)
-        }
-        flowerPrices = ArrayList<String>().apply {
-            parcel.readStringList(this)
-        }
-        flowerImages = ArrayList<String>().apply {
-            parcel.readStringList(this)
-        }
-        flowerQuantities = ArrayList<Int>().apply {
-            parcel.readList(this as MutableList<Any>, Int::class.java.classLoader)
-        }
+        flowerNames = parcel.createStringArrayList()
+        flowerPrices = parcel.createStringArrayList()
+        flowerImages = parcel.createStringArrayList()
+        flowerQuantities = parcel.readArrayList(Int::class.java.classLoader) as? ArrayList<Int>
         address = parcel.readString()
         totalPrice = parcel.readDouble()
         phoneNumber = parcel.readString()
@@ -76,25 +69,27 @@ class OrderDetails() : Serializable {
         paymentReceived = parcel.readByte() != 0.toByte()
         itemPushKey = parcel.readString()
         currentTime = parcel.readLong()
+        flowerKey = parcel.readString()
     }
 
-    fun writeToParcel(parcel: Parcel, flags: Int) {
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(userUid)
         parcel.writeString(userName)
-        flowerNames?.let { parcel.writeStringList(it) }
-        flowerPrices?.let { parcel.writeStringList(it) }
-        flowerImages?.let { parcel.writeStringList(it) }
-        flowerQuantities?.let { parcel.writeList(it as List<*>) }
+        parcel.writeStringList(flowerNames)
+        parcel.writeStringList(flowerPrices)
+        parcel.writeStringList(flowerImages)
+        parcel.writeList(flowerQuantities)
         parcel.writeString(address)
-        parcel.writeDouble(totalPrice ?: 0.0)
+        parcel.writeDouble(totalPrice ?: 0.0) // Handle null totalPrice
         parcel.writeString(phoneNumber)
         parcel.writeByte(if (orderAccepted) 1 else 0)
         parcel.writeByte(if (paymentReceived) 1 else 0)
         parcel.writeString(itemPushKey)
         parcel.writeLong(currentTime)
+        parcel.writeString(flowerKey)
     }
 
-    fun describeContents(): Int {
+    override fun describeContents(): Int {
         return 0
     }
 

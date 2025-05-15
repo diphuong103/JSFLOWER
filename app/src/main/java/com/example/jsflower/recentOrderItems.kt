@@ -18,6 +18,7 @@ class RecentOrderItems : AppCompatActivity() {
     private lateinit var allFlowerImages: ArrayList<String>
     private lateinit var allFlowerPrices: ArrayList<String>
     private lateinit var allFlowerQuantities: ArrayList<Int>
+    private lateinit var allFlowerStatuss: ArrayList<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +46,8 @@ class RecentOrderItems : AppCompatActivity() {
                 allFlowerImages = ArrayList(recentOrderItem.flowerImages)
                 allFlowerPrices = ArrayList(recentOrderItem.flowerPrices)
                 allFlowerQuantities = ArrayList(recentOrderItem.flowerQuantities)
+                allFlowerStatuss = ArrayList(listOf(recentOrderItem.status))
+
 
                 setAdapter()
             }
@@ -54,7 +57,7 @@ class RecentOrderItems : AppCompatActivity() {
     private fun setAdapter() {
         val rv = binding.recentBuyRecyclerView
         rv.layoutManager = LinearLayoutManager(this)
-        val adapter = RecentBuyAdapter(this, allFlowerNames, allFlowerImages, allFlowerPrices, allFlowerQuantities)
+        val adapter = RecentBuyAdapter(this, allFlowerNames, allFlowerImages, allFlowerPrices, allFlowerQuantities, allFlowerStatuss)
         rv.adapter = adapter
     }
 }

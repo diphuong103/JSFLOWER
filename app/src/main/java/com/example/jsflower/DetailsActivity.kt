@@ -446,7 +446,7 @@ class DetailsActivity : AppCompatActivity() {
             1,
             flowerIngredients,
             quantity = 1,
-            flowerKey = flowerKey
+            flowerKey = flowerKey,
         )
         // Lưu dữ liệu cartItem vào Firebase
         database.child("users").child(userId).child("CartItems").push().setValue(cartItem)

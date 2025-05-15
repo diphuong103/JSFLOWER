@@ -83,7 +83,7 @@ object PdfGenerator {
 
             // QR content (internal)
             val qrContent = "Thanh toan hoa don: ${order.flowerNames}\nSo tien: ${order.totalPrice} VND\n STK: 0325090532 (MB Bank)\n" +
-                    "Cảm ơn quý khách đã ủng hộ <3"
+                    "Cam on quy khach da ung ho <3"
             val qrBitmap = generateQRCodeBitmap(qrContent)
             val qrSize = 200
             val qrLeft = (canvas.width - qrSize) / 2

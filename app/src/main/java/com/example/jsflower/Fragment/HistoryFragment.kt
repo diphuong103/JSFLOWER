@@ -13,8 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.OrderDetails
+import com.example.jsflower.R
 import com.example.jsflower.RecentOrderItems
 import com.example.jsflower.adaptar.BuyAgainAdapter
+import com.example.jsflower.adaptar.RecentOrderAdapter
 import com.example.jsflower.databinding.FragmentHistoryBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
@@ -23,13 +25,13 @@ import java.io.Serializable
 class HistoryFragment : Fragment() {
     private lateinit var binding: FragmentHistoryBinding
     private lateinit var buyAgainAdapter: BuyAgainAdapter
+    private lateinit var recentOrderAdapter: RecentOrderAdapter
     private lateinit var database: FirebaseDatabase
     private lateinit var auth: FirebaseAuth
     private lateinit var userId: String
     private var listOfOrderItem: MutableList<OrderDetails> = mutableListOf()
 
     private lateinit var buyHistoryListener: ValueEventListener
-    private lateinit var orderStatusListener: ValueEventListener
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,50 +43,18 @@ class HistoryFragment : Fragment() {
         database = FirebaseDatabase.getInstance()
         userId = auth.currentUser?.uid ?: ""
 
+        setupRecyclerViews()
         setupBuyHistoryListener()
-
-        binding.rencenBuyItem.setOnClickListener {
-            seeItemsRecentBuy()
-        }
-
-        binding.receivedButton.setOnClickListener {
-            updateOrderStatus()
-        }
-
-        binding.cancelOrderButton.setOnClickListener {
-            val canceledOrder = listOfOrderItem[0]
-            val itemPushKey = canceledOrder.itemPushKey ?: return@setOnClickListener
-
-            val orderRef = database.reference.child("OrderDetails").child(itemPushKey)
-            val historyRef = database.reference.child("users").child(userId).child("BuyHistory")
-                .child(itemPushKey)
-            val cancelRef = database.reference.child("CanceledOrder").child(itemPushKey)
-
-            cancelRef.setValue(canceledOrder)
-                .addOnSuccessListener {
-                    orderRef.removeValue()
-                    historyRef.removeValue()
-                    binding.statusCircle.background.setTint(Color.RED)
-                    Toast.makeText(
-                        requireContext(),
-                        "Đơn hàng đã được hủy và lưu lịch sử",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(
-                        requireContext(),
-                        "Hủy đơn thất bại: ${it.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-        }
 
         return binding.root
     }
 
+    private fun setupRecyclerViews() {
+        binding.recentOrdersRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.buyAgainRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+    }
+
     private fun setupBuyHistoryListener() {
-        binding.rencenBuyItem.visibility = View.INVISIBLE
         val buyItemRef = database.reference.child("users").child(userId).child("BuyHistory")
         val sortingQuery = buyItemRef.orderByChild("currentTime")
 
@@ -96,11 +66,14 @@ class HistoryFragment : Fragment() {
                     buyHistoryItem?.let { listOfOrderItem.add(it) }
                 }
 
-                listOfOrderItem.reverse()
+                listOfOrderItem.reverse() // Newest first
+
                 if (listOfOrderItem.isNotEmpty()) {
-                    setDataInRecentBuyItem()
+                    setRecentOrdersRecyclerView()
                     setPreviousBuyItemsRecyclerView()
-                    setupOrderStatusListener()
+                } else {
+                    binding.textViewRecentOrders.visibility = View.GONE
+                    binding.textViewHistory.visibility = View.GONE
                 }
             }
 
@@ -112,47 +85,44 @@ class HistoryFragment : Fragment() {
         sortingQuery.addValueEventListener(buyHistoryListener)
     }
 
-    private fun setupOrderStatusListener() {
-        if (listOfOrderItem.isNotEmpty()) {
-            val itemPushKey = listOfOrderItem[0].itemPushKey ?: return
-            val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
+    private fun setRecentOrdersRecyclerView() {
+        binding.textViewRecentOrders.visibility = View.VISIBLE
 
-            orderStatusListener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val isDelivered =
-                        snapshot.child("delivered").getValue(Boolean::class.java) ?: false
-                    val isAccepted =
-                        snapshot.child("orderAccepted").getValue(Boolean::class.java) ?: false
+        val recentOrders = listOfOrderItem.filter {
+            it.status != "canceled" && it.status != "delivered"
+        }.take(3)
 
-                    with(binding) {
-                        if (isAccepted) {
-                            statusCircle.background.setTint(Color.GREEN)
-                            // Hiện nút nếu chưa xác nhận đã nhận hàng
-                            if (!isDelivered) {
-                                receivedButton.visibility = View.VISIBLE
-                            } else {
-                                receivedButton.visibility = View.GONE
-                            }
-
-                            cancelOrderButton.visibility = View.GONE
-                        } else {
-                            statusCircle.background.setTint(Color.GRAY)
-                            receivedButton.visibility = View.GONE
-                            cancelOrderButton.visibility = View.VISIBLE
-                        }
-                    }
-                }
-
-                    override fun onCancelled(error: DatabaseError) {}
-            }
-
-            completeOrderRef.addValueEventListener(orderStatusListener)
+        if (recentOrders.isEmpty()) {
+            binding.textViewRecentOrders.visibility = View.GONE
+            binding.recentOrdersRecyclerView.visibility = View.GONE
+            return
         }
+
+        binding.recentOrdersRecyclerView.visibility = View.VISIBLE
+
+        recentOrderAdapter = RecentOrderAdapter(
+            recentOrders,
+            requireContext(),
+            onViewOrderClick = { orderDetails ->
+                val intent = Intent(requireContext(), RecentOrderItems::class.java)
+                intent.putExtra("RecentBuyOrderItem", ArrayList(listOf(orderDetails)) as Serializable)
+                startActivity(intent)
+            },
+            onCancelOrderClick = { orderDetails ->
+                cancelOrder(orderDetails)
+            },
+            onReceivedClick = { orderDetails ->
+                updateOrderReceived(orderDetails)
+            }
+        )
+
+        binding.recentOrdersRecyclerView.adapter = recentOrderAdapter
     }
 
-    private fun updateOrderStatus() {
-        val itemPushKey = listOfOrderItem[0].itemPushKey ?: return
+    private fun updateOrderReceived(orderDetails: OrderDetails) {
+        val itemPushKey = orderDetails.itemPushKey ?: return
         val completeOrderRef = database.reference.child("CompletedOrder").child(itemPushKey)
+        val historyRef = database.reference.child("users").child(userId).child("BuyHistory").child(itemPushKey)
 
         val updates = mapOf(
             "paymentReceived" to true,
@@ -161,34 +131,43 @@ class HistoryFragment : Fragment() {
 
         completeOrderRef.updateChildren(updates)
             .addOnSuccessListener {
-                Toast.makeText(context, "Đã xác nhận nhận hàng", Toast.LENGTH_SHORT).show()
-                binding.receivedButton.visibility = View.GONE
+                historyRef.updateChildren(updates)
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Đã xác nhận nhận hàng", Toast.LENGTH_SHORT).show()
+                        setupBuyHistoryListener()
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Không thể cập nhật lịch sử", Toast.LENGTH_SHORT).show()
+                    }
             }
             .addOnFailureListener {
                 Toast.makeText(context, "Không thể cập nhật trạng thái", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun seeItemsRecentBuy() {
-        listOfOrderItem.firstOrNull()?.let {
-            val intent = Intent(requireContext(), RecentOrderItems::class.java)
-            intent.putExtra("RecentBuyOrderItem", ArrayList(listOfOrderItem) as Serializable)
-            startActivity(intent)
-        }
-    }
+    private fun cancelOrder(orderDetails: OrderDetails) {
+        val itemPushKey = orderDetails.itemPushKey ?: return
 
-    private fun setDataInRecentBuyItem() {
-        binding.rencenBuyItem.visibility = View.VISIBLE
-        val recentOrderItem = listOfOrderItem.firstOrNull() ?: return
+        val orderRef = database.reference.child("OrderDetails").child(itemPushKey)
+        val historyRef = database.reference.child("users").child(userId).child("BuyHistory").child(itemPushKey)
+        val cancelRef = database.reference.child("CanceledOrder").child(itemPushKey)
 
-        with(binding) {
-            buyAgainFlowerName.text = recentOrderItem.flowerNames?.firstOrNull() ?: ""
-            buyAgainFlowerPrice.text = recentOrderItem.flowerPrices?.firstOrNull() ?: ""
+        val updates = mapOf(
+            "status" to "canceled"
+        )
 
-            val image = recentOrderItem.flowerImages?.firstOrNull() ?: ""
-            val uri = Uri.parse(image)
-            Glide.with(requireContext()).load(uri).into(buyAgainFlowerImage)
-        }
+        cancelRef.setValue(orderDetails)
+            .addOnSuccessListener {
+                orderRef.removeValue()
+                historyRef.updateChildren(updates)
+                    .addOnSuccessListener {
+                        Toast.makeText(requireContext(), "Đơn hàng đã được hủy và lưu vào lịch sử", Toast.LENGTH_SHORT).show()
+                        setupBuyHistoryListener()
+                    }
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Hủy đơn thất bại: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun buyAgain(flowerName: String) {
@@ -212,8 +191,7 @@ class HistoryFragment : Fragment() {
                         Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
                     }
                     .addOnFailureListener {
-                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT)
-                            .show()
+                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
                     }
                 break
             }
@@ -221,28 +199,44 @@ class HistoryFragment : Fragment() {
     }
 
     private fun setPreviousBuyItemsRecyclerView() {
+        binding.textViewHistory.visibility = View.VISIBLE
+
+        val completedOrders = listOfOrderItem.filter {
+            it.status == "delivered" || it.status == "canceled"
+        }
+
+        if (completedOrders.isEmpty()) {
+            binding.textViewHistory.visibility = View.GONE
+            binding.buyAgainRecyclerView.visibility = View.GONE
+            return
+        }
+
+        binding.buyAgainRecyclerView.visibility = View.VISIBLE
+
         val buyAgainFlowerName = mutableListOf<String>()
         val buyAgainFlowerPrice = mutableListOf<String>()
         val buyAgainFlowerImage = mutableListOf<String>()
+        val orderStatusList = mutableListOf<String>()
 
-        for (i in 1 until listOfOrderItem.size) {
-            listOfOrderItem[i].flowerNames?.firstOrNull()?.let { buyAgainFlowerName.add(it) }
-            listOfOrderItem[i].flowerPrices?.firstOrNull()?.let { buyAgainFlowerPrice.add(it) }
-            listOfOrderItem[i].flowerImages?.firstOrNull()?.let { buyAgainFlowerImage.add(it) }
+        for (order in completedOrders) {
+            order.flowerNames?.firstOrNull()?.let { buyAgainFlowerName.add(it) }
+            order.flowerPrices?.firstOrNull()?.let { buyAgainFlowerPrice.add(it) }
+            order.flowerImages?.firstOrNull()?.let { buyAgainFlowerImage.add(it) }
+            orderStatusList.add(order.status ?: "unknown")
         }
 
-        val rv = binding.buyAgainRecyclerView
-        rv.layoutManager = LinearLayoutManager(requireContext())
         buyAgainAdapter = BuyAgainAdapter(
             buyAgainFlowerName,
             buyAgainFlowerPrice,
             buyAgainFlowerImage,
             requireContext(),
+            orderStatusList,
             onBuyAgainClick = { flowerName ->
                 buyAgain(flowerName)
             }
         )
-        rv.adapter = buyAgainAdapter
+
+        binding.buyAgainRecyclerView.adapter = buyAgainAdapter
     }
 
     override fun onDestroyView() {
@@ -251,18 +245,8 @@ class HistoryFragment : Fragment() {
             val buyItemRef = database.reference.child("users").child(userId).child("BuyHistory")
             val sortingQuery = buyItemRef.orderByChild("currentTime")
             sortingQuery.removeEventListener(buyHistoryListener)
-
-            if (listOfOrderItem.isNotEmpty()) {
-                val itemPushKey = listOfOrderItem[0].itemPushKey
-                if (itemPushKey != null) {
-                    val completeOrderRef =
-                        database.reference.child("CompletedOrder").child(itemPushKey)
-                    if (::orderStatusListener.isInitialized) {
-                        completeOrderRef.removeEventListener(orderStatusListener)
-                    }
-                }
-            }
         } catch (e: Exception) {
+            // Handle exception nếu cần
         }
     }
 }

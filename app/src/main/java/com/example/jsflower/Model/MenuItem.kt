@@ -12,4 +12,6 @@ data class MenuItem(
     var key: String = "",
     var categoryId: String? = null,
     var categoryName: String? = null,
+    var discountedPrice: String? = null
+
 )

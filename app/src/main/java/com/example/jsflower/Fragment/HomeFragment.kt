@@ -227,6 +227,10 @@ class HomeFragment : Fragment() {
                     menuItem?.let {
                         // Set the key for each menu item
                         it.key = flowerSnapshot.key ?: ""
+
+                        val discountPrice = flowerSnapshot.child("discountPrice").getValue(String::class.java)
+                        it.discountedPrice = discountPrice ?: it.flowerPrice
+
                         menuItems.add(it)
                     }
                 }
@@ -255,7 +259,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
-        val adapter = PopularAdapter(subsetMenuItems, requireContext()) { menuItem ->
+        val adapter = PopularAdapter(subsetMenuItems.toMutableList(), requireContext()) { menuItem ->
             addToCart(menuItem) // Thêm vào giỏ hàng
         }
         binding.popularRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
@@ -279,7 +283,8 @@ class HomeFragment : Fragment() {
             1, // Item ID is set to 1 as in the DetailActivity
             menuItem.flowerIngredient,
             quantity = 1,
-            flowerKey = menuItem.key
+            flowerKey = menuItem.key,
+            discountedPrice = menuItem.discountedPrice
         )
 
         // Save to Firebase
@@ -418,7 +423,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setProductItemAdapter(categoryProducts: List<MenuItem>) {
-        val adapter = PopularAdapter(categoryProducts, requireContext()) { menuItem ->
+        val adapter = PopularAdapter(categoryProducts.toMutableList(), requireContext()) { menuItem ->
             addToCart(menuItem) // Thêm vào giỏ hàng
         }
         binding.categoryFlowerRecyclerView.layoutManager = LinearLayoutManager(requireContext())

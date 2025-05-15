@@ -9,52 +9,129 @@
     android:background="@color/white"
     tools:context=".ChooseLocationActivity">
 
-    <TextView
-        android:id="@+id/textView9"
-        android:layout_width="153dp"
-        android:layout_height="33dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginTop="32dp"
-        android:text="@string/ch_n_a_i_m_c_a_b_n"
-
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
-        android:layout_width="0dp"
+    <!-- Toolbar with back button and title -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:boxStrokeWidth="0dp"
-        app:boxStrokeWidthFocused="0dp"
-        app:endIconMode="dropdown_menu"
-        app:endIconTint="@color/black"
-        app:layout_constraintTop_toBottomOf="@+id/textView9"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <AutoCompleteTextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/listOfLocation"
-            android:inputType="none"
-            android:text="@string/ch_n_a_i_m"/>
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:contentDescription="Back button"
+            android:src="@drawable/arrow_left" />
 
-    </com.google.android.material.textfield.TextInputLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Chọn địa điểm"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </androidx.appcompat.widget.Toolbar>
 
     <TextView
-        android:id="@+id/textView11"
+        android:id="@+id/textView9"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="25dp"
-        android:fontFamily="@font/playfairdisplay"
-        android:text="🌸 &quot;Để mang đến trải nghiệm mua hoa tốt nhất, chúng tôi cần quyền truy cập vị trí của bạn.
-        Việc bật định vị giúp đề xuất cửa hàng gần bạn, ước tính thời gian giao hàng chính xác và đảm bảo quá trình đặt hoa diễn ra suôn sẻ.&quot;"
-        android:textSize="18sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Chọn địa điểm của bạn"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        app:boxStrokeWidth="1dp"
+        app:endIconMode="dropdown_menu"
+        app:endIconTint="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView9">
+
+        <AutoCompleteTextView
+            android:id="@+id/listOfLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Chọn địa điểm"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Map Container -->
+    <FrameLayout
+        android:id="@+id/mapContainer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnShowAddresses"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textInputLayout">
+
+        <org.osmdroid.views.MapView
+            android:id="@+id/map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
+    <!-- Button to show saved addresses -->
+    <Button
+        android:id="@+id/btnShowAddresses"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Xem địa chỉ đã lưu"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/btnSaveLocation"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Button to add a new address -->
+    <Button
+        android:id="@+id/btnAddAddress"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Thêm địa chỉ mới"
+        app:layout_constraintBottom_toTopOf="@+id/btnShowAddresses"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Button to save the selected location -->
+    <Button
+        android:id="@+id/btnSaveLocation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/proceedbutonshape"
+        android:text="Chọn địa chỉ này"
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

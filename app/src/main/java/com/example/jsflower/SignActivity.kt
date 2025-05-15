@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.example.jsflower.Fragment.HomeFragment
 import com.example.jsflower.Model.UserModel
 import com.example.jsflower.databinding.ActivitySignBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -45,6 +46,14 @@ class SignActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            startActivity(Intent(this, MainActivity::class.java))
+        } else {
+            startActivity(Intent(this, Login_Activity::class.java))
+        }
+        finish()
+
         setupPasswordVisibilityToggle()
 
         // Cấu hình Google Sign-In
@@ -52,6 +61,9 @@ class SignActivity : AppCompatActivity() {
             .requestIdToken(getString(R.string.default_web_client_id)) // Thay bằng Web client ID từ Firebase
             .requestEmail()
             .build()
+
+
+
 
         // Khởi tạo Firebase Auth và Database
         auth = FirebaseAuth.getInstance()
