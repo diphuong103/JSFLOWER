@@ -39,8 +39,8 @@ class PopularAdapter(
         val menuItem = popularItems[position]
         holder.bind(menuItem)
 
-        // Load product tags and apply discounts
-        loadProductTagsAndApplyDiscount(menuItem, holder, position)
+        // Load product tags and get discount price from Firebase
+        loadProductTagsAndDiscountPrice(menuItem, holder, position)
 
         // Load reviews for product
         loadProductReviews(menuItem.key, holder)
@@ -48,50 +48,43 @@ class PopularAdapter(
 
     override fun getItemCount(): Int = popularItems.size
 
-    private fun loadProductTagsAndApplyDiscount(menuItem: MenuItem, holder: PopularViewHolder, position: Int) {
-        val tagsRef = FirebaseDatabase.getInstance().reference.child("list").child(menuItem.key).child("tags")
+    private fun loadProductTagsAndDiscountPrice(menuItem: MenuItem, holder: PopularViewHolder, position: Int) {
+        // Get reference to the product in Firebase
+        val productRef = FirebaseDatabase.getInstance().reference.child("list").child(menuItem.key)
 
-        tagsRef.addValueEventListener(object : ValueEventListener {
+        // Add listener to get tags and discountPrice
+        productRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Default: No discount
-                var discount = 0.0
+                // Get product tags to display badge
                 var tagText = ""
                 var tagBgColor = R.drawable.sale_badge_shape
 
-
+                // Handle tags to display appropriate badge
+                val tagsSnapshot = snapshot.child("tags")
                 try {
-
-                    val tagString = snapshot.getValue(String::class.java)
+                    val tagString = tagsSnapshot.getValue(String::class.java)
                     if (tagString != null) {
-
                         when {
                             tagString.contains("Sale", ignoreCase = true) -> {
-                                discount = 0.25
                                 tagText = "SALE"
                                 tagBgColor = R.drawable.sale_badge_shape
                             }
                             tagString.contains("Nổi bật", ignoreCase = true) -> {
-                                discount = 0.20
                                 tagText = "NỔI BẬT"
-
                             }
                             tagString.contains("Mới", ignoreCase = true) -> {
-                                discount = 0.15
                                 tagText = "MỚI"
                             }
                         }
                     } else {
-                        val tagsMap = snapshot.getValue() as? Map<*, *>
+                        val tagsMap = tagsSnapshot.getValue() as? Map<*, *>
                         if (tagsMap != null) {
                             if (tagsMap.containsKey("Sale")) {
-                                discount = 0.25
                                 tagText = "SALE"
                                 tagBgColor = R.drawable.sale_badge_shape
                             } else if (tagsMap.containsKey("Nổi bật")) {
-                                discount = 0.20
                                 tagText = "NỔI BẬT"
                             } else if (tagsMap.containsKey("Mới")) {
-                                discount = 0.15
                                 tagText = "MỚI"
                             }
                         }
@@ -100,6 +93,7 @@ class PopularAdapter(
                     e.printStackTrace()
                 }
 
+                // Display tag badge if available
                 if (tagText.isNotEmpty()) {
                     holder.binding.tagBadge.apply {
                         text = tagText
@@ -110,56 +104,42 @@ class PopularAdapter(
                     holder.binding.tagBadge.visibility = View.GONE
                 }
 
-                val originalPrice = menuItem.flowerPrice?.toDoubleOrNull() ?: 0.0
-                var finalPrice = originalPrice
+                // Get discount price directly from Firebase
+                val discountPrice = snapshot.child("discountPrice").getValue(String::class.java)
+                val originalPrice = menuItem.flowerPrice
 
-                if (discount > 0) {
+                // Update UI based on discount price
+                if (discountPrice != null && discountPrice != originalPrice && originalPrice != null) {
+                    // Show both prices if there's a discount
                     holder.binding.realPrice.apply {
-                        text = formatPrice(originalPrice)
+                        text = originalPrice
                         visibility = View.VISIBLE
+                        paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
                     }
-
-                    finalPrice = originalPrice * (1 - discount)
-                    tagText = tagText
-                    holder.binding.menusalePrice.text = formatPrice(finalPrice)
+                    holder.binding.menusalePrice.text = discountPrice
+                    menuItem.discountedPrice = discountPrice
                 } else {
+                    // Show only the original price if no discount
                     holder.binding.realPrice.visibility = View.GONE
-                    holder.binding.menusalePrice.text = formatPrice(originalPrice)
+                    holder.binding.menusalePrice.text = originalPrice ?: "0"
+                    menuItem.discountedPrice = originalPrice
                 }
 
-                val finalPriceString = formatPrice(finalPrice)
-                menuItem.discountedPrice = finalPriceString
-                popularItems.forEach {
-                    Log.d("DEBUG_PRICE", "Item: ${it.flowerName} - Discounted: ${it.discountedPrice}")
-                }
+                // Update item in list
+                popularItems[position] = menuItem
 
-                val discountPriceRef = FirebaseDatabase.getInstance()
-                    .reference.child("list")
-                    .child(menuItem.key)
-                    .child("discountPrice")
-
-                discountPriceRef.setValue(finalPriceString)
-                    .addOnSuccessListener {
-                        notifyItemChanged(position)
-                    }
-                    .addOnFailureListener { e ->
-                        e.printStackTrace()
-                    }
-
-
-
-                setupItemClickListener(holder, menuItem, finalPriceString)
-
-                setupAddToCartButton(holder, menuItem, finalPriceString)
+                // Setup click listeners
+                setupItemClickListener(holder, menuItem, menuItem.discountedPrice ?: originalPrice ?: "0")
+                setupAddToCartButton(holder, menuItem, menuItem.discountedPrice ?: originalPrice ?: "0")
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Handle error - use original price
                 holder.binding.tagBadge.visibility = View.GONE
                 holder.binding.realPrice.visibility = View.GONE
                 holder.binding.menusalePrice.text = menuItem.flowerPrice ?: "0"
 
                 setupItemClickListener(holder, menuItem, menuItem.flowerPrice ?: "0")
-
                 setupAddToCartButton(holder, menuItem, menuItem.flowerPrice ?: "0")
             }
         })
@@ -184,7 +164,7 @@ class PopularAdapter(
         holder.binding.menuAddToCart.setOnClickListener {
             val updatedMenuItem = MenuItem(
                 menuItem.flowerName,
-                finalPrice,
+                menuItem.flowerPrice,
                 menuItem.flowerDescription,
                 menuItem.flowerImage,
                 menuItem.flowerIngredient,
@@ -194,11 +174,6 @@ class PopularAdapter(
             )
             onAddToCart(updatedMenuItem)
         }
-    }
-
-    private fun formatPrice(price: Double): String {
-        val formatter = NumberFormat.getNumberInstance(Locale("vi", "VN"))
-        return formatter.format(price)
     }
 
     inner class PopularViewHolder(val binding: MenuItemBinding) :
@@ -211,10 +186,10 @@ class PopularAdapter(
             binding.tagBadge.visibility = View.GONE
 
             if (menuItem.discountedPrice != null && menuItem.discountedPrice != menuItem.flowerPrice) {
-                binding.realPrice.visibility = android.view.View.VISIBLE
+                binding.realPrice.visibility = View.VISIBLE
                 binding.realPrice.paintFlags = binding.realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
             } else {
-                binding.realPrice.visibility = android.view.View.GONE
+                binding.realPrice.visibility = View.GONE
             }
 
             // Load image
@@ -227,8 +202,6 @@ class PopularAdapter(
             }
         }
     }
-
-
 
     private fun loadProductReviews(productId: String, holder: PopularViewHolder) {
         val reviewsRef = FirebaseDatabase.getInstance().reference.child("reviews").child(productId)

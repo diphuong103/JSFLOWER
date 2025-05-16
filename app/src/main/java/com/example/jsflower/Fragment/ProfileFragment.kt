@@ -85,13 +85,23 @@ class ProfileFragment : Fragment() {
             }
             startActivityForResult(intent, PICK_IMAGE_REQUEST)
         }
-
         binding.logOut.setOnClickListener {
-            auth.signOut()
-            val intent = Intent(requireContext(), Login_Activity::class.java)
-            startActivity(intent)
-            requireActivity().finish()
+            try {
+                auth.signOut()
+                Toast.makeText(requireContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(requireActivity(), Login_Activity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+
+                requireActivity().finish()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(requireContext(), "Lỗi khi đăng xuất: ${e.message}", Toast.LENGTH_LONG).show()
+            }
         }
+
+
 
 
         return binding.root

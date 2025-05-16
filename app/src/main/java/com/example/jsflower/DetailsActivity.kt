@@ -1,7 +1,5 @@
 package com.example.jsflower
 
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -47,6 +45,8 @@ class DetailsActivity : AppCompatActivity() {
     private var flowerPrice: String? = null
     private var flowerKey: String? = null
     private var flowerTag: String? = null
+    private var flowerOriginalPrice: String? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,9 +61,11 @@ class DetailsActivity : AppCompatActivity() {
         flowerDescriptions = intent.getStringExtra("MenuItemDescription")
         flowerIngredients = intent.getStringExtra("MenuItemIngredient")
         flowerPrice = intent.getStringExtra("MenuItemPrice")
+        flowerOriginalPrice = intent.getStringExtra("MenuItemOriginalPrice")
         flowerImage = intent.getStringExtra("MenuItemImage")
         flowerKey = intent.getStringExtra("MenuItemKey")
         flowerTag = intent.getStringExtra("TAG")
+
 
         // Log the retrieved key for debugging
         println("DEBUG: Retrieved flowerKey from intent: $flowerKey")
@@ -72,47 +74,52 @@ class DetailsActivity : AppCompatActivity() {
         println("DEBUG: flowerKey = $flowerKey")
         println("DEBUG: TAG = $flowerTag")
 
+        println("DEBUG: flowerPrice = $flowerPrice")
+        println("DEBUG: flowerOriginalPrice = $flowerOriginalPrice")
+
+
         with(binding) {
             detailFlowerName.text = flowerName
             detailDescriptionTextView.text = flowerDescriptions
             detailIngredients.text = flowerIngredients
+
+            // Giá sale (giá hiện tại)
             priceTextView.text = flowerPrice
-            tagProduct.text = flowerTag
 
-            var productRealPrice: Int? = null
+            // Giá gốc (nếu có, hiển thị gạch ngang)
+            priceTextView.text = flowerPrice
 
-            if (!flowerPrice.isNullOrEmpty()) {
-                val price = flowerPrice?.toIntOrNull()
-
-                when (flowerTag) {
-                    "Sale" -> productRealPrice = price?.times(75)?.div(100) // giảm 25%
-                    "Mới" -> productRealPrice = price?.times(85)?.div(100) // giảm 15%
-                    "Nổi bật" -> productRealPrice = price?.times(80)?.div(100) // giảm 20%
-                    "Mặc định" -> {
-                        tagProduct.visibility = View.GONE
-                        realPrice.visibility = View.GONE
-                    }
-
-                    else -> realPrice.text = flowerPrice // Hoặc ẩn realPrice nếu không có tag
-                }
-
-                // Hiển thị giá gốc và giá sau giảm
-                if (productRealPrice != null) {
-                    realPrice.text = formatVND(price?.toDouble() ?: 0.0) // Giá gốc
-                    priceTextView.text = formatVND(productRealPrice.toDouble()) // Giá sau giảm
-                }
+// Giá gốc (nếu có, hiển thị gạch ngang)
+            if (!flowerOriginalPrice.isNullOrEmpty() && flowerOriginalPrice != flowerPrice) {
+//                realPrice.text = flowerOriginalPrice
+//                realPrice.paintFlags = realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+//                realPrice.visibility = View.VISIBLE
+            } else {
+//                realPrice.visibility = View.GONE
             }
 
+            tagProduct.text = flowerTag
 
             Glide.with(this@DetailsActivity).load(Uri.parse(flowerImage))
                 .into(detailsFlowerImageView)
         }
+
+        binding.addReviewTitle.visibility = View.GONE
+        binding.userRatingBar.visibility = View.GONE
+        binding.reviewEditText.visibility = View.GONE
+        binding.submitReviewButton.visibility = View.GONE
+        binding.ycMH.visibility = View.VISIBLE
+
         if (flowerKey.isNullOrEmpty()) {
             println("DEBUG: flowerKey is null or empty, trying to find by name")
             findFlowerKeyByName {
                 loadDataWithKey()
+                checkPurchaseHistoryForCurrentProduct()
             }
 
+        }else{
+            loadDataWithKey()
+            checkPurchaseHistoryForCurrentProduct()
         }
 
 
@@ -312,7 +319,11 @@ class DetailsActivity : AppCompatActivity() {
         }
 
         if (flowerKey.isNullOrEmpty()) {
-            Toast.makeText(this, "Không thể tìm thấy mã sản phẩm để đánh giá", Toast.LENGTH_SHORT)
+            Toast.makeText(
+                this,
+                "Không thể tìm thấy mã sản phẩm để đánh giá",
+                Toast.LENGTH_SHORT
+            )
                 .show()
             return
         }
@@ -336,7 +347,8 @@ class DetailsActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val userName =
                     snapshot.child("name").getValue(String::class.java) ?: "Người dùng ẩn danh"
-                val userImage = snapshot.child("profileImage").getValue(String::class.java) ?: ""
+                val userImage =
+                    snapshot.child("profileImage").getValue(String::class.java) ?: ""
 
                 // Create review object
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
@@ -405,13 +417,18 @@ class DetailsActivity : AppCompatActivity() {
         if (newReviewKey != null) {
             reviewsRef.child(newReviewKey).setValue(review)
                 .addOnSuccessListener {
-                    Toast.makeText(this, "Cảm ơn bạn đã gửi đánh giá!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Cảm ơn bạn đã gửi đánh giá!", Toast.LENGTH_SHORT)
+                        .show()
                     // Clear input fields
                     binding.userRatingBar.rating = 0f
                     binding.reviewEditText.setText("")
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(this, "Lỗi khi gửi đánh giá: ${e.message}", Toast.LENGTH_SHORT)
+                    Toast.makeText(
+                        this,
+                        "Lỗi khi gửi đánh giá: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    )
                         .show()
                 }
         } else {
@@ -451,10 +468,18 @@ class DetailsActivity : AppCompatActivity() {
         // Lưu dữ liệu cartItem vào Firebase
         database.child("users").child(userId).child("CartItems").push().setValue(cartItem)
             .addOnSuccessListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    "Thêm sản phẩm vào giỏ hàng thành công <3",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }.addOnFailureListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thất bại -_-", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    "Thêm sản phẩm vào giỏ hàng thất bại -_-",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
     }
@@ -505,10 +530,13 @@ class DetailsActivity : AppCompatActivity() {
 //    }
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
-        val adapter = MenuAdapter(subsetMenuItems, this@DetailsActivity)
-        {
-            addItemToCart(menuItem = it)
-        }
+        // Chuyển đổi List thành ArrayList vì MenuAdapter yêu cầu ArrayList
+        val adapter = MenuAdapter(
+            ArrayList(subsetMenuItems),
+            this@DetailsActivity,
+            onAddToCart = { menuItem -> addItemToCart(menuItem) },
+            listener = null // Không sử dụng interface listener
+        )
 
         // Đảm bảo hiển thị phù hợp với layout item
         val layoutManager = GridLayoutManager(this, 2)
@@ -549,14 +577,170 @@ class DetailsActivity : AppCompatActivity() {
             flowerKey = menuItem.key
         )
 
-        database.reference.child("users").child(userId).child("CartItems").push().setValue(cartItem)
+        database.reference.child("users").child(userId).child("CartItems").push()
+            .setValue(cartItem)
             .addOnSuccessListener {
-                Toast.makeText(this, "Thêm sản phẩm vào giỏ hàng thành công!", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    "Thêm sản phẩm vào giỏ hàng thành công!",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Thêm giỏ hàng thất bại: ${it.message}", Toast.LENGTH_SHORT)
+                Toast.makeText(
+                    this,
+                    "Thêm giỏ hàng thất bại: ${it.message}",
+                    Toast.LENGTH_SHORT
+                )
                     .show()
             }
     }
+
+    private var flowerKeysFromHistory: MutableList<String> = mutableListOf()
+
+    private fun checkPurchaseHistoryForCurrentProduct() {
+        val userId = auth.currentUser?.uid
+
+        if (userId == null) {
+            // User not logged in, hide review components
+            updateReviewUIVisibility(false)
+            println("DEBUG: User not logged in, hiding review components")
+            return
+        }
+
+        if (flowerKey.isNullOrEmpty()) {
+            println("DEBUG: Can't check purchase history without flower key")
+            return
+        }
+
+        val buyHistoryRef = database.reference
+            .child("users")
+            .child(userId)
+            .child("BuyHistory")
+
+        println("DEBUG: Checking purchase history for product with key: $flowerKey")
+
+        buyHistoryRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var hasPurchased = false
+
+                if (snapshot.exists()) {
+                    // Check all orders in the user's buy history
+                    for (orderSnapshot in snapshot.children) {
+                        // Try different paths to find flower keys
+                        // Option 1: Direct flowerKey field
+                        val directFlowerKey = orderSnapshot.child("flowerKey").getValue(String::class.java)
+
+                        // Option 2: In flowerImages node
+                        val flowerImagesSnapshot = orderSnapshot.child("flowerImages")
+                        val flowerKeyInImages = flowerImagesSnapshot.child("flowerKey").getValue(String::class.java)
+
+                        // Option 3: Check in items node if it exists
+                        val itemsSnapshot = orderSnapshot.child("items")
+                        val itemKeys = mutableListOf<String>()
+                        for (itemSnapshot in itemsSnapshot.children) {
+                            val itemFlowerKey = itemSnapshot.child("flowerKey").getValue(String::class.java)
+                            if (!itemFlowerKey.isNullOrEmpty()) {
+                                itemKeys.add(itemFlowerKey)
+                            }
+                        }
+
+                        // Process all potential key strings we found
+                        val keyStringsToCheck = listOfNotNull(directFlowerKey, flowerKeyInImages) + itemKeys
+
+                        for (keyString in keyStringsToCheck) {
+                            // Handle both possible formats: comma-separated list or single key
+                            if (keyString.contains(",")) {
+                                // It's a comma-separated list
+                                val productKeys = keyString.split(",")
+                                for (keyEntry in productKeys) {
+                                    // Extract just the key part (before the "=" if it exists)
+                                    val productId = if (keyEntry.contains("=")) {
+                                        keyEntry.split("=")[0].trim('{', '}', ' ')
+                                    } else {
+                                        keyEntry.trim('{', '}', ' ')
+                                    }
+
+                                    println("DEBUG: Comparing product ID: $productId with flowerKey: $flowerKey")
+
+                                    // Check if this order contains our current product
+                                    if (productId == flowerKey) {
+                                        hasPurchased = true
+                                        println("DEBUG: Match found! User has purchased product with key: $flowerKey")
+                                        break
+                                    }
+                                }
+                            } else {
+                                // It's a single key or key-value pair
+                                // Need to handle formats like "{-OQCi2ci2J5kNp412n9n=1}"
+                                val cleanedKeyString = keyString.trim('{', '}', ' ')
+
+                                // Extract the key part (before the "=" if it exists)
+                                val productId = if (cleanedKeyString.contains("=")) {
+                                    cleanedKeyString.split("=")[0].trim()
+                                } else {
+                                    cleanedKeyString
+                                }
+
+                                println("DEBUG: Comparing single product ID: original='$keyString', extracted='$productId' with flowerKey: $flowerKey")
+
+                                if (productId == flowerKey) {
+                                    hasPurchased = true
+                                    println("DEBUG: Match found! User has purchased product with key: $flowerKey")
+                                    break
+                                }
+                            }
+
+                            if (hasPurchased) break
+                        }
+
+                        if (hasPurchased) break // Exit loop early if we found a match
+                    }
+                } else {
+                    println("DEBUG: User has no purchase history")
+                }
+
+                // Update UI based on purchase history
+                updateReviewUIVisibility(hasPurchased)
+                println("DEBUG: Review UI visibility updated - can review: $hasPurchased")
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                println("DEBUG: Error checking purchase history: ${error.message}")
+                // Default to hiding review UI on error
+                updateReviewUIVisibility(false)
+            }
+        })
+    }
+
+    // Helper method to update UI visibility based on purchase status
+    private fun updateReviewUIVisibility(hasPurchased: Boolean) {
+        if (hasPurchased) {
+            // User has purchased this product, show review components
+            binding.addReviewTitle.visibility = View.VISIBLE
+            binding.userRatingBar.visibility = View.VISIBLE
+            binding.reviewEditText.visibility = View.VISIBLE
+            binding.submitReviewButton.visibility = View.VISIBLE
+            binding.ycMH.visibility = View.GONE
+        } else {
+            // User has not purchased this product, hide review components
+            binding.addReviewTitle.visibility = View.GONE
+            binding.userRatingBar.visibility = View.GONE
+            binding.reviewEditText.visibility = View.GONE
+            binding.submitReviewButton.visibility = View.GONE
+            binding.ycMH.visibility = View.VISIBLE
+        }
+    }
+
+    fun getOriginalPriceFromDiscounted(adjustedPrice: Double, tag: String?): Double {
+        val discountPercent = when (tag) {
+            "Sale" -> 0.25
+            "Nổi Bật" -> 0.20
+            "Mới" -> 0.15
+            else -> 0.0
+        }
+        return if (discountPercent != 0.0) adjustedPrice / (1 - discountPercent) else adjustedPrice
+    }
+
 }

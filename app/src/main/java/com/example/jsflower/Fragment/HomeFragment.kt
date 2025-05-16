@@ -42,6 +42,9 @@ class HomeFragment : Fragment() {
     private var chatRef: DatabaseReference? = null
     private val currentUserId: String = FirebaseAuth.getInstance().currentUser?.uid ?: "default_user_id"
 
+    // Track the active listeners to remove them properly
+    private val activeListeners = mutableListOf<Pair<DatabaseReference, ValueEventListener>>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -118,7 +121,7 @@ class HomeFragment : Fragment() {
                 }
 
                 // Update notification dot visibility
-                if (isAdded && context != null) {
+                if (isAdded && activity != null && !isDetached()) {
                     activity?.runOnUiThread {
                         binding.notificationDot.visibility = if (hasUnreadAdminMessages) View.VISIBLE else View.GONE
                     }
@@ -131,6 +134,9 @@ class HomeFragment : Fragment() {
         }
 
         chatRef?.addValueEventListener(messagesListener)
+        chatRef?.let { ref ->
+            activeListeners.add(Pair(ref, messagesListener))
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -149,8 +155,11 @@ class HomeFragment : Fragment() {
         // Reference to the banners in Firebase
         val bannersRef = FirebaseDatabase.getInstance().getReference("banners")
 
-        bannersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        val bannersListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // Check if fragment is still attached before using context
+                if (!isAdded || isDetached()) return
+
                 val currentDate = Date().time
                 val activeBanners = ArrayList<BannerModel>()
 
@@ -190,11 +199,17 @@ class HomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Check if fragment is attached to context before continuing
+                if (!isAdded || isDetached()) return
+
                 Log.e("HomeFragment", "Error loading banners: ${error.message}")
                 // Use default images on error
                 imageSlider.setImageList(defaultImageList, ScaleTypes.FIT)
             }
-        })
+        }
+
+        bannersRef.addListenerForSingleValueEvent(bannersListener)
+        activeListeners.add(Pair(bannersRef, bannersListener))
 
         // Set up click listener for the slider
         imageSlider.setItemClickListener(object : ItemClickListener {
@@ -203,6 +218,9 @@ class HomeFragment : Fragment() {
             }
 
             override fun onItemSelected(position: Int) {
+                // Check if fragment is attached to context before showing toast
+                if (!isAdded || isDetached()) return
+
                 val itemMessage = "Selected Image $position"
                 Toast.makeText(requireContext(), itemMessage, Toast.LENGTH_SHORT).show()
             }
@@ -212,6 +230,23 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         // Remove listeners to prevent memory leaks
+        removeAllListeners()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Make sure all listeners are removed
+        removeAllListeners()
+    }
+
+    private fun removeAllListeners() {
+        // Clear all active listeners
+        for ((ref, listener) in activeListeners) {
+            ref.removeEventListener(listener)
+        }
+        activeListeners.clear()
+
+        // Also remove the chat listener if it exists
         chatRef?.removeEventListener(messagesListener)
     }
 
@@ -220,8 +255,11 @@ class HomeFragment : Fragment() {
         menuItems = mutableListOf()
 
         // laays du lieu menu item tu db
-        flowerRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        val flowerListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // Check if fragment is still attached
+                if (!isAdded || isDetached()) return
+
                 for (flowerSnapshot in snapshot.children) {
                     val menuItem = flowerSnapshot.getValue(MenuItem::class.java)
                     menuItem?.let {
@@ -240,16 +278,26 @@ class HomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Check if fragment is still attached before showing toast
+                if (!isAdded || isDetached()) return
+
+                Log.e("HomeFragment", "Error loading popular items: ${error.message}")
                 Toast.makeText(
                     requireContext(),
                     "Không thể tải dữ liệu sản phẩm: ${error.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        })
+        }
+
+        flowerRef.addListenerForSingleValueEvent(flowerListener)
+        activeListeners.add(Pair(flowerRef, flowerListener))
     }
 
     private fun randomPopularItems() {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         val index = menuItems.indices.toList().shuffled()
         val numItemToShow = min(6, menuItems.size)
         val subsetMenuItems = index.take(numItemToShow).map {
@@ -259,6 +307,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun setPopularItemAdapter(subsetMenuItems: List<MenuItem>) {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         val adapter = PopularAdapter(subsetMenuItems.toMutableList(), requireContext()) { menuItem ->
             addToCart(menuItem) // Thêm vào giỏ hàng
         }
@@ -267,6 +318,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun addToCart(menuItem: MenuItem) {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         val userId = FirebaseAuth.getInstance().currentUser?.uid
 
         if (userId == null) {
@@ -291,10 +345,16 @@ class HomeFragment : Fragment() {
         val database = FirebaseDatabase.getInstance().reference
         database.child("users").child(userId).child("CartItems").push().setValue(cartItem)
             .addOnSuccessListener {
+                // Check if fragment is still attached before showing toast
+                if (!isAdded || isDetached()) return@addOnSuccessListener
+
                 Toast.makeText(requireContext(),
                     "Thêm ${menuItem.flowerName} vào giỏ hàng thành công <3",
                     Toast.LENGTH_SHORT).show()
             }.addOnFailureListener {
+                // Check if fragment is still attached before showing toast
+                if (!isAdded || isDetached()) return@addOnFailureListener
+
                 Toast.makeText(requireContext(),
                     "Thêm vào giỏ hàng thất bại -_-",
                     Toast.LENGTH_SHORT).show()
@@ -302,6 +362,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupCategoriesRecyclerView() {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         categoryList = ArrayList<CategoryModel>()
         binding.categoriesRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
@@ -311,6 +374,9 @@ class HomeFragment : Fragment() {
             categoryList,
             object : CategoryAdapter.OnCategoryClickListener {
                 override fun onCategoryClick(category: CategoryModel, position: Int) {
+                    // Check if fragment is still attached before showing toast
+                    if (!isAdded || isDetached()) return
+
                     Toast.makeText(
                         requireContext(),
                         "Đã chọn: ${category.name}",
@@ -329,8 +395,11 @@ class HomeFragment : Fragment() {
     private fun loadCategoriesFromFirebase() {
         val categoryRef = database.reference.child("category")
 
-        categoryRef.addValueEventListener(object : ValueEventListener {
+        val categoryListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // Check if fragment is still attached before processing
+                if (!isAdded || isDetached()) return
+
                 categoryList.clear()
 
                 for (categorySnapshot in snapshot.children) {
@@ -344,6 +413,9 @@ class HomeFragment : Fragment() {
                     categoryList.add(category)
                 }
 
+                // Check again before updating UI
+                if (!isAdded || isDetached()) return
+
                 (binding.categoriesRecyclerView.adapter as CategoryAdapter).updateCategories(
                     categoryList
                 )
@@ -354,23 +426,39 @@ class HomeFragment : Fragment() {
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Check if fragment is attached to context before showing toast
+                if (!isAdded || isDetached()) {
+                    Log.e("HomeFragment", "Error loading categories: ${error.message}, Fragment not attached")
+                    return
+                }
+
+                Log.e("HomeFragment", "Error loading categories: ${error.message}")
                 Toast.makeText(
                     requireContext(),
                     "Không thể tải dữ liệu danh mục: ${error.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        })
+        }
+
+        categoryRef.addValueEventListener(categoryListener)
+        activeListeners.add(Pair(categoryRef, categoryListener))
     }
 
     private fun loadCategoryProducts(category: CategoryModel) {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         binding.categoryProductsHeader.text = "Sản phẩm ${category.name}"
 
         val categoryProductsRef =
             database.reference.child("category").child(category.id).child("products")
 
-        categoryProductsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        val productsListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                // Check if fragment is still attached
+                if (!isAdded || isDetached()) return
+
                 val categoryProducts = mutableListOf<MenuItem>()
 
                 val totalProducts = snapshot.childrenCount
@@ -384,45 +472,73 @@ class HomeFragment : Fragment() {
                 for (productSnapshot in snapshot.children) {
                     val productId = productSnapshot.key ?: continue
 
-                    database.reference.child("list").child(productId)
-                        .addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(productDataSnapshot: DataSnapshot) {
-                                val menuItem = productDataSnapshot.getValue(MenuItem::class.java)
-                                menuItem?.let {
-                                    // Ensure we set the key for the item
-                                    it.key = productId
-                                    categoryProducts.add(it)
-                                }
+                    val productListener = object : ValueEventListener {
+                        override fun onDataChange(productDataSnapshot: DataSnapshot) {
+                            // Check if fragment is still attached
+                            if (!isAdded || isDetached()) return
 
-                                loadedProducts++
-
-                                if (loadedProducts.toLong() == totalProducts) {
-                                    setProductItemAdapter(categoryProducts)
-                                }
+                            val menuItem = productDataSnapshot.getValue(MenuItem::class.java)
+                            menuItem?.let {
+                                // Ensure we set the key for the item
+                                it.key = productId
+                                categoryProducts.add(it)
                             }
 
-                            override fun onCancelled(error: DatabaseError) {
-                                Toast.makeText(
-                                    requireContext(),
-                                    "Không thể tải chi tiết sản phẩm: ${error.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                            loadedProducts++
+
+                            if (loadedProducts.toLong() == totalProducts) {
+                                // Final check before updating adapter
+                                if (!isAdded || isDetached()) return
+                                setProductItemAdapter(categoryProducts)
                             }
-                        })
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            // Check if fragment is still attached before showing toast
+                            if (!isAdded || isDetached()) {
+                                Log.e("HomeFragment", "Error loading product details: ${error.message}, Fragment not attached")
+                                return
+                            }
+
+                            Log.e("HomeFragment", "Error loading product details: ${error.message}")
+                            Toast.makeText(
+                                requireContext(),
+                                "Không thể tải chi tiết sản phẩm: ${error.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+
+                    val productRef = database.reference.child("list").child(productId)
+                    productRef.addListenerForSingleValueEvent(productListener)
+                    activeListeners.add(Pair(productRef, productListener))
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Check if fragment is still attached before showing toast
+                if (!isAdded || isDetached()) {
+                    Log.e("HomeFragment", "Error loading category products: ${error.message}, Fragment not attached")
+                    return
+                }
+
+                Log.e("HomeFragment", "Error loading category products: ${error.message}")
                 Toast.makeText(
                     requireContext(),
                     "Không thể tải sản phẩm theo danh mục: ${error.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
-        })
+        }
+
+        categoryProductsRef.addListenerForSingleValueEvent(productsListener)
+        activeListeners.add(Pair(categoryProductsRef, productsListener))
     }
 
     private fun setProductItemAdapter(categoryProducts: List<MenuItem>) {
+        // Check if fragment is still attached
+        if (!isAdded || isDetached()) return
+
         val adapter = PopularAdapter(categoryProducts.toMutableList(), requireContext()) { menuItem ->
             addToCart(menuItem) // Thêm vào giỏ hàng
         }

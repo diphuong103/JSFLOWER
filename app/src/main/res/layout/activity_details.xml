@@ -48,7 +48,7 @@
             android:id="@+id/detailFlowerName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
             android:text="FlowerName"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -61,12 +61,15 @@
             android:id="@+id/priceTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:text="200.000đ"
             android:textColor="@android:color/holo_red_light"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="@+id/realPrice"
-            app:layout_constraintTop_toBottomOf="@+id/realPrice" />
+            app:layout_constraintEnd_toEndOf="@+id/detailFlowerName"
+            app:layout_constraintHorizontal_bias="0.093"
+            app:layout_constraintStart_toStartOf="@+id/detailFlowerName"
+            app:layout_constraintTop_toBottomOf="@+id/detailFlowerName" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/addToCartButton"
@@ -218,6 +221,15 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/userRatingBar" />
 
+                <TextView
+                    android:id="@+id/ycMH"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🌷 Chỉ người ĐÃ TRẢI mới được REVIEW nha!Mua rồi mình cùng chia sẻ cảm nhận nhé 💬✨"
+                    android:textStyle="bold"
+                    tools:ignore="MissingConstraints" />
+
+                <!-- Submit Review Button -->
                 <Button
                     android:id="@+id/submitReviewButton"
                     android:layout_width="wrap_content"
@@ -277,12 +289,13 @@
             android:id="@+id/textView13"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
+            android:layout_marginStart="16dp"
             android:text="VND"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="@+id/priceTextView"
             app:layout_constraintStart_toEndOf="@+id/priceTextView"
-            app:layout_constraintTop_toTopOf="@+id/priceTextView" />
+            app:layout_constraintTop_toTopOf="@+id/priceTextView"
+            app:layout_constraintVertical_bias="0.0" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -306,29 +319,6 @@
             app:srcCompat="@drawable/hinh_do_trong" />
 
         <TextView
-            android:id="@+id/realPrice"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:text="259,000"
-            android:textColor="#888888"
-            android:textSize="14sp"
-            android:textStyle="italic"
-            app:layout_constraintEnd_toEndOf="@+id/detailFlowerName"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="@+id/detailFlowerName"
-            app:layout_constraintTop_toBottomOf="@+id/detailFlowerName" />
-
-        <TextView
-            android:id="@+id/textView16"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="Giảm giá chỉ còn"
-            app:layout_constraintBottom_toBottomOf="@+id/realPrice"
-            app:layout_constraintStart_toEndOf="@+id/realPrice"
-            app:layout_constraintTop_toTopOf="@+id/realPrice" />
-
-        <TextView
             android:id="@+id/tagProduct"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -340,6 +330,7 @@
             app:layout_constraintStart_toEndOf="@+id/detailFlowerName"
             app:layout_constraintTop_toTopOf="@+id/detailFlowerName"
             app:layout_constraintVertical_bias="1.0" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

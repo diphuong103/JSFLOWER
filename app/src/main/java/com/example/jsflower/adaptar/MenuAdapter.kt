@@ -3,11 +3,9 @@ package com.example.jsflower.adaptar
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -19,14 +17,19 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import java.text.NumberFormat
-import java.util.Locale
 
 class MenuAdapter(
-    private val menuItems: List<MenuItem>,
+    private val menuItems: MutableList<MenuItem>,
     private val context: Context,
-    private val onAddToCartClick: ((MenuItem) -> Unit)? = null
+    private val onAddToCart: ((MenuItem) -> Unit)? = null,
+    private val listener: MenuAdapterListener? = null
 ) : RecyclerView.Adapter<MenuAdapter.MenuViewHolder>() {
+
+    // Interface for handling other existing callbacks
+    interface MenuAdapterListener {
+        fun onItemClick(menuItem: MenuItem)
+        fun onAddToCartClick(menuItem: MenuItem)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuViewHolder {
         val binding = MenuItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -37,8 +40,8 @@ class MenuAdapter(
         val menuItem = menuItems[position]
         holder.bind(menuItem)
 
-        // Load product tags and apply discounts
-        loadProductTagsAndApplyDiscount(menuItem, holder)
+        // Load product tags and discount price
+        loadProductTagsAndDiscountPrice(menuItem, holder, position)
 
         // Load reviews for product
         loadProductReviews(menuItem.key, holder)
@@ -46,46 +49,43 @@ class MenuAdapter(
 
     override fun getItemCount(): Int = menuItems.size
 
-    private fun loadProductTagsAndApplyDiscount(menuItem: MenuItem, holder: MenuViewHolder) {
-        val tagsRef = FirebaseDatabase.getInstance().reference.child("list").child(menuItem.key).child("tags")
+    private fun loadProductTagsAndDiscountPrice(menuItem: MenuItem, holder: MenuViewHolder, position: Int) {
+        // Get reference to the product in Firebase
+        val productRef = FirebaseDatabase.getInstance().reference.child("list").child(menuItem.key)
 
-        tagsRef.addValueEventListener(object : ValueEventListener {
+        // Add listener to get tags and discountPrice
+        productRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                // Default: No discount
-                var discount = 0.0
+                // Get product tags to display badge
                 var tagText = ""
                 var tagBgColor = R.drawable.sale_badge_shape
 
+                // Handle tags to display appropriate badge
+                val tagsSnapshot = snapshot.child("tags")
                 try {
-                    val tagString = snapshot.getValue(String::class.java)
+                    val tagString = tagsSnapshot.getValue(String::class.java)
                     if (tagString != null) {
                         when {
                             tagString.contains("Sale", ignoreCase = true) -> {
-                                discount = 0.25
                                 tagText = "SALE"
                                 tagBgColor = R.drawable.sale_badge_shape
                             }
                             tagString.contains("Nổi bật", ignoreCase = true) -> {
-                                discount = 0.20
                                 tagText = "NỔI BẬT"
                             }
                             tagString.contains("Mới", ignoreCase = true) -> {
-                                discount = 0.15
                                 tagText = "MỚI"
                             }
                         }
                     } else {
-                        val tagsMap = snapshot.getValue() as? Map<*, *>
+                        val tagsMap = tagsSnapshot.getValue() as? Map<*, *>
                         if (tagsMap != null) {
                             if (tagsMap.containsKey("Sale")) {
-                                discount = 0.25
                                 tagText = "SALE"
                                 tagBgColor = R.drawable.sale_badge_shape
                             } else if (tagsMap.containsKey("Nổi bật")) {
-                                discount = 0.20
                                 tagText = "NỔI BẬT"
                             } else if (tagsMap.containsKey("Mới")) {
-                                discount = 0.15
                                 tagText = "MỚI"
                             }
                         }
@@ -94,6 +94,7 @@ class MenuAdapter(
                     e.printStackTrace()
                 }
 
+                // Display tag badge if available
                 if (tagText.isNotEmpty()) {
                     holder.binding.tagBadge.apply {
                         text = tagText
@@ -104,75 +105,142 @@ class MenuAdapter(
                     holder.binding.tagBadge.visibility = View.GONE
                 }
 
-                val originalPrice = menuItem.flowerPrice?.toDoubleOrNull() ?: 0.0
-                var finalPrice = originalPrice
+                // Get discount price directly from Firebase and ensure non-null original price
+                val discountPrice = snapshot.child("discountPrice").getValue(String::class.java)
+                val originalPrice = menuItem.flowerPrice ?: "0"
 
-                if (discount > 0) {
+                // Create a new MenuItem with updated pricing
+                val updatedMenuItem = MenuItem(
+                    menuItem.flowerName,
+                    originalPrice, // Always store the original price
+                    menuItem.flowerDescription,
+                    menuItem.flowerImage,
+                    menuItem.flowerIngredient,
+                    menuItem.key,
+                    menuItem.tags,
+                    discountPrice // Store discount price if available
+                )
+
+                // Update UI based on whether there's a discount
+                if (discountPrice != null && discountPrice != originalPrice) {
+                    // Show both prices if there's a discount
                     holder.binding.realPrice.apply {
-                        text = formatPrice(originalPrice)
+                        text = originalPrice
                         visibility = View.VISIBLE
                         paintFlags = paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
                     }
-
-                    finalPrice = originalPrice * (1 - discount)
-                    holder.binding.menusalePrice.text = formatPrice(finalPrice)
+                    holder.binding.menusalePrice.text = discountPrice
                 } else {
+                    // Show only the original price if no discount
                     holder.binding.realPrice.visibility = View.GONE
-                    holder.binding.menusalePrice.text = formatPrice(originalPrice)
+                    holder.binding.menusalePrice.text = originalPrice
                 }
 
-                val finalPriceString = formatPrice(finalPrice)
+                // Update item in list with updated pricing
+                menuItems[position] = updatedMenuItem
 
-                setupItemClickListener(holder, menuItem, finalPriceString)
-                setupAddToCartButton(holder, menuItem, finalPriceString)
+                // Setup click listeners with the updated menuItem
+                setupItemClickListener(holder, updatedMenuItem)
+                setupAddToCartButton(holder, updatedMenuItem)
             }
 
             override fun onCancelled(error: DatabaseError) {
+                // Handle error - use original price
                 holder.binding.tagBadge.visibility = View.GONE
                 holder.binding.realPrice.visibility = View.GONE
-                holder.binding.menusalePrice.text = menuItem.flowerPrice ?: "0"
 
-                setupItemClickListener(holder, menuItem, menuItem.flowerPrice ?: "0")
-                setupAddToCartButton(holder, menuItem, menuItem.flowerPrice ?: "0")
+                val originalPrice = menuItem.flowerPrice ?: "0"
+                holder.binding.menusalePrice.text = originalPrice
+
+                setupItemClickListener(holder, menuItem)
+                setupAddToCartButton(holder, menuItem)
             }
         })
     }
 
-    private fun setupItemClickListener(holder: MenuViewHolder, menuItem: MenuItem, finalPrice: String) {
+    private fun setupItemClickListener(holder: MenuViewHolder, menuItem: MenuItem) {
         holder.itemView.setOnClickListener {
-            val intent = Intent(context, DetailsActivity::class.java).apply {
-                putExtra("MenuItemName", menuItem.flowerName)
-                putExtra("MenuItemPrice", finalPrice)
-                putExtra("MenuItemImage", menuItem.flowerImage)
-                putExtra("MenuItemDescription", menuItem.flowerDescription)
-                putExtra("MenuItemIngredient", menuItem.flowerIngredient)
-                putExtra("MenuItemKey", menuItem.key)
-                putExtra("TAG", menuItem.tags)
+            // Try to use the interface method first
+            if (listener != null) {
+                listener.onItemClick(menuItem)
+            } else {
+                // Fall back to the original implementation
+                val discountPrice = menuItem.discountedPrice
+                val originalPrice = menuItem.flowerPrice ?: "0"
+
+                // Make sure we're not passing null for originalPrice
+                val safeOriginalPrice = if (originalPrice.isNullOrEmpty()) "0" else originalPrice
+
+                // Always pass the current displayed price as MenuItemPrice (either discounted or original)
+                // Always pass the original price as MenuItemOriginalPrice
+                val intent = Intent(context, DetailsActivity::class.java).apply {
+                    putExtra("MenuItemName", menuItem.flowerName)
+                    putExtra("MenuItemPrice", discountPrice ?: safeOriginalPrice)
+                    putExtra("MenuItemOriginalPrice", safeOriginalPrice) // Make sure it's never null
+                    putExtra("MenuItemImage", menuItem.flowerImage)
+                    putExtra("MenuItemDescription", menuItem.flowerDescription)
+                    putExtra("MenuItemIngredient", menuItem.flowerIngredient)
+                    putExtra("MenuItemKey", menuItem.key)
+                    putExtra("TAG", menuItem.tags)
+                }
+
+                // Log the data being sent to DetailsActivity for debugging
+                println("DEBUG: Sending data to DetailsActivity")
+                println("DEBUG: MenuItemName = ${menuItem.flowerName}")
+                println("DEBUG: MenuItemPrice = ${discountPrice ?: safeOriginalPrice}")
+                println("DEBUG: MenuItemOriginalPrice = $safeOriginalPrice")
+                println("DEBUG: MenuItemKey = ${menuItem.key}")
+
+                context.startActivity(intent)
             }
-            context.startActivity(intent)
         }
     }
 
-    private fun setupAddToCartButton(holder: MenuViewHolder, menuItem: MenuItem, finalPrice: String) {
+    private fun setupAddToCartButton(holder: MenuViewHolder, menuItem: MenuItem) {
         holder.binding.menuAddToCart.setOnClickListener {
-            val updatedMenuItem = MenuItem(
-                menuItem.flowerName,
-                menuItem.flowerPrice,
-                menuItem.flowerDescription,
-                menuItem.flowerImage,
-                menuItem.flowerIngredient,
-                menuItem.key,
-                menuItem.tags,
-                finalPrice
-            )
-            onAddToCartClick?.invoke(updatedMenuItem)
-            Toast.makeText(context, "Đã thêm sản phẩm vào giỏ hàng thành công <3", Toast.LENGTH_SHORT).show()
+            // Try to use the onAddToCart callback first (for new implementation)
+            if (onAddToCart != null) {
+                onAddToCart.invoke(menuItem)
+            }
+            // Then try to use the interface method (for existing implementations)
+            else if (listener != null) {
+                listener.onAddToCartClick(menuItem)
+            }
         }
     }
 
-    private fun formatPrice(price: Double): String {
-        val formatter = NumberFormat.getNumberInstance(Locale("vi", "VN"))
-        return formatter.format(price)
+    inner class MenuViewHolder(val binding: MenuItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(menuItem: MenuItem) {
+            binding.menuFlowerName.text = menuItem.flowerName
+
+            // Always show the currently applicable price (discounted or original)
+            val priceToShow = menuItem.discountedPrice ?: menuItem.flowerPrice ?: "0"
+            binding.menusalePrice.text = priceToShow
+
+            // Original price is only shown when there is a discount
+            val originalPrice = menuItem.flowerPrice ?: ""
+            binding.realPrice.text = originalPrice
+
+            if (menuItem.discountedPrice != null && menuItem.discountedPrice != menuItem.flowerPrice) {
+                binding.realPrice.visibility = View.VISIBLE
+                binding.realPrice.paintFlags = binding.realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+            } else {
+                binding.realPrice.visibility = View.GONE
+            }
+
+            binding.tagBadge.visibility = View.GONE
+
+            // Load image
+            try {
+                Glide.with(context)
+                    .load(Uri.parse(menuItem.flowerImage))
+                    .into(binding.menuImage)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun loadProductReviews(productId: String, holder: MenuViewHolder) {
@@ -203,30 +271,5 @@ class MenuAdapter(
                 holder.binding.ratingText.text = "(0)"
             }
         })
-    }
-
-    inner class MenuViewHolder(val binding: MenuItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(menuItem: MenuItem) {
-            binding.menuFlowerName.text = menuItem.flowerName
-            binding.menusalePrice.text = menuItem.discountedPrice ?: menuItem.flowerPrice ?: "0"
-            binding.realPrice.text = menuItem.flowerPrice ?: ""
-            binding.tagBadge.visibility = View.GONE
-
-            if (menuItem.discountedPrice != null && menuItem.discountedPrice != menuItem.flowerPrice) {
-                binding.realPrice.visibility = View.VISIBLE
-                binding.realPrice.paintFlags = binding.realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-            } else {
-                binding.realPrice.visibility = View.GONE
-            }
-
-            // Load image
-            try {
-                Glide.with(context)
-                    .load(Uri.parse(menuItem.flowerImage))
-                    .into(binding.menuImage)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 }
