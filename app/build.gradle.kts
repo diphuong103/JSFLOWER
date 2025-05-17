@@ -103,5 +103,12 @@ dependencies {
     implementation (libs.osmdroid.android)
 
 
+    //thu vien phong to hinh (review_image)
+    implementation (libs.photoview)
+
+    implementation (libs.androidx.core)
+
+
+
 
 }

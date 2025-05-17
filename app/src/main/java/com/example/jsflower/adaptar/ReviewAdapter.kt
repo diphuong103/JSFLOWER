@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.RatingBar
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.jsflower.Model.ReviewModel
@@ -20,6 +21,9 @@ class   ReviewAdapter(private val reviewsList: List<ReviewModel>) :
         val ratingBar: RatingBar = itemView.findViewById(R.id.reviewRatingBar)
         val reviewDate: TextView = itemView.findViewById(R.id.reviewDate)
         val reviewComment: TextView = itemView.findViewById(R.id.reviewComment)
+        val reviewImagesRecyclerView: RecyclerView = itemView.findViewById(R.id.reviewImageRecyclerView)
+
+
         // Add reference to image recycler view if you implement image attachments
     }
 
@@ -49,9 +53,20 @@ class   ReviewAdapter(private val reviewsList: List<ReviewModel>) :
             holder.userImage.setImageResource(R.drawable.user)
         }
 
-        // If you want to implement image attachments later
-        // review.images can be used with another adapter for horizontal recyclerview
+        if (review.images != null && review.images.isNotEmpty()) {
+            holder.reviewImagesRecyclerView.visibility = View.VISIBLE
+            setupReviewImagesRecyclerView(holder.reviewImagesRecyclerView, review.images)
+        } else {
+            holder.reviewImagesRecyclerView.visibility = View.GONE
+        }
+
     }
+    private fun setupReviewImagesRecyclerView(recyclerView: RecyclerView, images: List<String>) {
+        recyclerView.layoutManager = LinearLayoutManager(recyclerView.context, LinearLayoutManager.HORIZONTAL, false)
+        recyclerView.adapter = ReviewImageAdapter(recyclerView.context, images)
+    }
+
+
 
     override fun getItemCount(): Int = reviewsList.size
 }

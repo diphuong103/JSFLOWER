@@ -1,5 +1,6 @@
 package com.example.jsflower
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
@@ -8,12 +9,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.jsflower.ImgBB.ImgBBUploadService
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.CategoryModel
 import com.example.jsflower.Model.MenuItem
 import com.example.jsflower.Model.ReviewModel
 import com.example.jsflower.adaptar.MenuAdapter
 import com.example.jsflower.adaptar.ReviewAdapter
+import com.example.jsflower.adaptar.ReviewImageAdapter
 import com.example.jsflower.databinding.ActivityDetailsBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -148,6 +151,13 @@ class DetailsActivity : AppCompatActivity() {
         binding.reviewsRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@DetailsActivity)
             adapter = reviewAdapter
+        }
+
+        binding.addImageButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "image/*"
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            startActivityForResult(Intent.createChooser(intent, "Chọn ảnh"), 101)
         }
 
         // Set up submit review button
@@ -379,26 +389,21 @@ class DetailsActivity : AppCompatActivity() {
         })
     }
 
+    private val selectedImageUris = mutableListOf<Uri>()
     private fun submitReview() {
         val userId = auth.currentUser?.uid
-
         if (userId == null) {
             Toast.makeText(this, "Vui lòng đăng nhập để đánh giá", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Make sure we have a key before submitting a review
         if (flowerKey.isNullOrEmpty() && !flowerName.isNullOrEmpty()) {
             findFlowerKeyAndThenSubmitReview(userId)
             return
         }
 
         if (flowerKey.isNullOrEmpty()) {
-            Toast.makeText(
-                this,
-                "Không thể tìm thấy mã sản phẩm để đánh giá",
-                Toast.LENGTH_SHORT
-            )
+            Toast.makeText(this, "Không thể tìm thấy mã sản phẩm để đánh giá", Toast.LENGTH_SHORT)
                 .show()
             return
         }
@@ -416,31 +421,24 @@ class DetailsActivity : AppCompatActivity() {
             return
         }
 
-        // Get user information
         val userRef = database.reference.child("users").child(userId)
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val userName =
                     snapshot.child("name").getValue(String::class.java) ?: "Người dùng ẩn danh"
-                val userImage =
-                    snapshot.child("profileImage").getValue(String::class.java) ?: ""
+                val userImage = snapshot.child("profileImage").getValue(String::class.java) ?: ""
 
-                // Create review object
                 val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                 val currentDate = dateFormat.format(Date())
 
-                val review = ReviewModel(
-                    userId = userId,
-                    userName = userName,
-                    userImage = userImage,
-                    rating = rating,
-                    comment = comment,
-                    date = currentDate,
-                    images = emptyList() // Add image support in the future if needed
+                uploadImagesAndSubmitReview(
+                    userId,
+                    userName,
+                    userImage,
+                    rating,
+                    comment,
+                    currentDate
                 )
-
-                // Save to Firebase
-                saveReviewToFirebase(review)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -452,6 +450,86 @@ class DetailsActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun uploadImagesAndSubmitReview(
+        userId: String,
+        userName: String,
+        userImage: String,
+        rating: Float,
+        comment: String,
+        date: String
+    ) {
+        if (selectedImageUris.isEmpty()) {
+            // Không có ảnh, submit trực tiếp
+            val review =
+                ReviewModel(userId, userName, userImage, rating, comment, date, emptyList())
+            saveReviewToFirebase(review)
+            return
+        }
+
+        val uploadedUrls = mutableListOf<String>()
+        val service = ImgBBUploadService()
+
+        for ((index, uri) in selectedImageUris.withIndex()) {
+            service.uploadImage(this, uri, object : ImgBBUploadService.UploadCallback {
+                override fun onSuccess(imageUrl: String) {
+                    uploadedUrls.add(imageUrl)
+
+                    // Khi tất cả ảnh đã được upload
+                    if (uploadedUrls.size == selectedImageUris.size) {
+                        val review = ReviewModel(
+                            userId,
+                            userName,
+                            userImage,
+                            rating,
+                            comment,
+                            date,
+                            uploadedUrls
+                        )
+                        runOnUiThread {
+                            saveReviewToFirebase(review)
+                        }
+                    }
+                }
+
+                override fun onFailure(errorMessage: String) {
+                    runOnUiThread {
+                        Toast.makeText(
+                            this@DetailsActivity,
+                            "Tải ảnh thất bại: $errorMessage",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            })
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 101 && resultCode == RESULT_OK) {
+            selectedImageUris.clear()
+            if (data?.clipData != null) {
+                for (i in 0 until data.clipData!!.itemCount) {
+                    selectedImageUris.add(data.clipData!!.getItemAt(i).uri)
+                }
+            } else {
+                data?.data?.let { selectedImageUris.add(it) }
+            }
+            updateSelectedImagesPreview()
+        }
+    }
+
+    private fun updateSelectedImagesPreview() {
+        val adapter = ReviewImageAdapter(this, selectedImageUris.map { it.toString() })
+        binding.selectedImagesRecyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.selectedImagesRecyclerView.adapter = adapter
+    }
+
+
+
 
     // New helper method to find flower key and then submit review
     private fun findFlowerKeyAndThenSubmitReview(userId: String) {
