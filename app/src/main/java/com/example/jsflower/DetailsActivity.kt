@@ -117,7 +117,7 @@ class DetailsActivity : AppCompatActivity() {
                 checkPurchaseHistoryForCurrentProduct()
             }
 
-        }else{
+        } else {
             loadDataWithKey()
             checkPurchaseHistoryForCurrentProduct()
         }
@@ -157,6 +157,81 @@ class DetailsActivity : AppCompatActivity() {
 
         // Load existing reviews - but only if we have a key or can find one
         loadReviews()
+        setupClickListeners()
+    }
+
+    private fun fetchFlowerDetails(itemName: String) {
+        val database = FirebaseDatabase.getInstance()
+        val menuRef = database.getReference("menu")
+
+        menuRef.orderByChild("flowerName").equalTo(itemName)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (menuSnapshot in snapshot.children) {
+                            flowerName =
+                                menuSnapshot.child("flowerName").getValue(String::class.java)
+                            flowerPrice =
+                                menuSnapshot.child("flowerPrice").getValue(String::class.java)
+                            flowerDescriptions =
+                                menuSnapshot.child("flowerDescription").getValue(String::class.java)
+                            flowerIngredients =
+                                menuSnapshot.child("flowerIngredient").getValue(String::class.java)
+                            flowerImage =
+                                menuSnapshot.child("flowerImage").getValue(String::class.java)
+
+                            setupUI()
+                            break
+                        }
+                    } else {
+                        Toast.makeText(
+                            this@DetailsActivity,
+                            "Không tìm thấy thông tin sản phẩm",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        finish() // Close activity if we can't find the item
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Toast.makeText(
+                        this@DetailsActivity,
+                        "Lỗi: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    finish()
+                }
+            })
+    }
+
+    private fun setupUI() {
+        // Set the data to UI components
+        binding.detailFlowerName.text = flowerName
+        binding.priceTextView.text = flowerPrice
+        binding.detailDescriptionTextView.text = flowerDescriptions ?: "Không có mô tả"
+        binding.detailIngredients.text = flowerIngredients ?: "Không có thông tin"
+
+        // Load image safely
+        if (!flowerImage.isNullOrEmpty()) {
+            try {
+                Glide.with(this@DetailsActivity)
+                    .load(flowerImage)
+                    .into(binding.detailsFlowerImageView)
+            } catch (e: Exception) {
+                // Handle image loading error
+                Toast.makeText(this, "Không thể tải hình ảnh", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Set quantity text
+//        binding.qu.text = flowerQuantity.toString()
+    }
+
+    private fun setupClickListeners() {
+        // Back button
+        binding.imageButton.setOnClickListener {
+            finish()
+        }
     }
 
     private fun loadReviews() {
@@ -630,24 +705,28 @@ class DetailsActivity : AppCompatActivity() {
                     for (orderSnapshot in snapshot.children) {
                         // Try different paths to find flower keys
                         // Option 1: Direct flowerKey field
-                        val directFlowerKey = orderSnapshot.child("flowerKey").getValue(String::class.java)
+                        val directFlowerKey =
+                            orderSnapshot.child("flowerKey").getValue(String::class.java)
 
                         // Option 2: In flowerImages node
                         val flowerImagesSnapshot = orderSnapshot.child("flowerImages")
-                        val flowerKeyInImages = flowerImagesSnapshot.child("flowerKey").getValue(String::class.java)
+                        val flowerKeyInImages =
+                            flowerImagesSnapshot.child("flowerKey").getValue(String::class.java)
 
                         // Option 3: Check in items node if it exists
                         val itemsSnapshot = orderSnapshot.child("items")
                         val itemKeys = mutableListOf<String>()
                         for (itemSnapshot in itemsSnapshot.children) {
-                            val itemFlowerKey = itemSnapshot.child("flowerKey").getValue(String::class.java)
+                            val itemFlowerKey =
+                                itemSnapshot.child("flowerKey").getValue(String::class.java)
                             if (!itemFlowerKey.isNullOrEmpty()) {
                                 itemKeys.add(itemFlowerKey)
                             }
                         }
 
                         // Process all potential key strings we found
-                        val keyStringsToCheck = listOfNotNull(directFlowerKey, flowerKeyInImages) + itemKeys
+                        val keyStringsToCheck =
+                            listOfNotNull(directFlowerKey, flowerKeyInImages) + itemKeys
 
                         for (keyString in keyStringsToCheck) {
                             // Handle both possible formats: comma-separated list or single key

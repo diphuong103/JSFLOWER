@@ -14,6 +14,8 @@ import de.hdodenhof.circleimageview.CircleImageView
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable
+
 
 class ChatAdapter(private val messages: List<ChatModel>, private val currentUserId: String) : RecyclerView.Adapter<ChatAdapter.MessageViewHolder>() {
 
@@ -52,6 +54,12 @@ class ChatAdapter(private val messages: List<ChatModel>, private val currentUser
     override fun onBindViewHolder(holder: MessageViewHolder, position: Int) {
         val message = messages[position]
         val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
+        val progressDrawable = CircularProgressDrawable(holder.itemView.context).apply {
+            strokeWidth = 5f
+            centerRadius = 30f
+            start()
+        }
+
 
         if (message.userId == "client") {
             // Tin nhắn của người dùng (client)
@@ -64,6 +72,7 @@ class ChatAdapter(private val messages: List<ChatModel>, private val currentUser
                 Glide.with(holder.itemView.context)
                     .load(message.imageUrl)
                     .centerCrop()
+                    .placeholder(progressDrawable)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.error_image)
                     .into(holder.senderImageView)
@@ -85,6 +94,7 @@ class ChatAdapter(private val messages: List<ChatModel>, private val currentUser
                 Glide.with(holder.itemView.context)
                     .load(message.imageUrl)
                     .centerCrop()
+                    .placeholder(progressDrawable)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.error_image)
                     .into(holder.receiverImageView)
@@ -99,4 +109,13 @@ class ChatAdapter(private val messages: List<ChatModel>, private val currentUser
     }
 
     override fun getItemCount(): Int = messages.size
+
+    private fun createCircularProgressDrawable(view: View): CircularProgressDrawable {
+        return CircularProgressDrawable(view.context).apply {
+            strokeWidth = 5f
+            centerRadius = 30f
+            start()
+        }
+    }
+
 }

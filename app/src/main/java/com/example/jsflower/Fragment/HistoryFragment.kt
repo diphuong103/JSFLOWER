@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.example.jsflower.DetailsActivity
 import com.example.jsflower.Model.CartItems
 import com.example.jsflower.Model.OrderDetails
 import com.example.jsflower.R
@@ -170,34 +171,6 @@ class HistoryFragment : Fragment() {
             }
     }
 
-    private fun buyAgain(flowerName: String) {
-        for (order in listOfOrderItem) {
-            val index = order.flowerNames?.indexOf(flowerName) ?: -1
-            if (index != -1) {
-                val cartItem = CartItems(
-                    flowerName = flowerName,
-                    flowerPrice = order.flowerPrices?.get(index) ?: "",
-                    flowerImage = order.flowerImages?.get(index) ?: "",
-                    flowerQuantity = 1,
-                    flowerDescription = "",
-                    flowerIngredient = ""
-                )
-
-                val userId = auth.currentUser?.uid ?: ""
-                val cartItemRef = database.getReference("users/$userId/CartItems")
-
-                cartItemRef.push().setValue(cartItem)
-                    .addOnSuccessListener {
-                        Toast.makeText(context, "Đã thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(context, "Không thể thêm vào giỏ hàng", Toast.LENGTH_SHORT).show()
-                    }
-                break
-            }
-        }
-    }
-
     private fun setPreviousBuyItemsRecyclerView() {
         binding.textViewHistory.visibility = View.VISIBLE
 
@@ -230,10 +203,7 @@ class HistoryFragment : Fragment() {
             buyAgainFlowerPrice,
             buyAgainFlowerImage,
             requireContext(),
-            orderStatusList,
-            onBuyAgainClick = { flowerName ->
-                buyAgain(flowerName)
-            }
+            orderStatusList
         )
 
         binding.buyAgainRecyclerView.adapter = buyAgainAdapter
