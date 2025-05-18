@@ -77,6 +77,9 @@ dependencies {
 // Glide
     implementation(libs.glide)
 
+
+    implementation (libs.facebook.shimmer)
+
     implementation (libs.circleimageview)
     implementation (libs.facebook.android.sdk)
     implementation (libs.facebook.login.v1803)
@@ -107,6 +110,7 @@ dependencies {
     implementation (libs.photoview)
 
     implementation (libs.androidx.core)
+
 
 
 

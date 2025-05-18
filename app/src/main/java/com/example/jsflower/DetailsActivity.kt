@@ -85,27 +85,43 @@ class DetailsActivity : AppCompatActivity() {
             detailFlowerName.text = flowerName
             detailDescriptionTextView.text = flowerDescriptions
             detailIngredients.text = flowerIngredients
-
-            // Giá sale (giá hiện tại)
             priceTextView.text = flowerPrice
 
-            // Giá gốc (nếu có, hiển thị gạch ngang)
-            priceTextView.text = flowerPrice
+            val priceValue = flowerPrice?.toDoubleOrNull()
 
-// Giá gốc (nếu có, hiển thị gạch ngang)
-            if (!flowerOriginalPrice.isNullOrEmpty() && flowerOriginalPrice != flowerPrice) {
-//                realPrice.text = flowerOriginalPrice
-//                realPrice.paintFlags = realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-//                realPrice.visibility = View.VISIBLE
+            if (priceValue != null && !flowerTag.isNullOrEmpty()) {
+                val originalPrice = when (flowerTag) {
+                    "Sale" -> priceValue / 0.75
+                    "Nổi bật" -> priceValue / 0.80
+                    "Mới" -> priceValue / 0.85
+                    else -> null
+                }
+
+                if (originalPrice != null) {
+                    realPrice.visibility = View.VISIBLE
+                    tagProduct.visibility = View.VISIBLE
+
+                    // Gạch ngang giá gốc
+                    realPrice.paintFlags =
+                        realPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+                    realPrice.text = formatVND(originalPrice)
+                } else {
+                    realPrice.visibility = View.GONE
+                    tagProduct.visibility = View.GONE
+                }
+
+                tagProduct.text = flowerTag
             } else {
-//                realPrice.visibility = View.GONE
+                realPrice.visibility = View.GONE
+                tagProduct.visibility = View.GONE
             }
 
-            tagProduct.text = flowerTag
-
-            Glide.with(this@DetailsActivity).load(Uri.parse(flowerImage))
+            Glide.with(this@DetailsActivity)
+                .load(Uri.parse(flowerImage))
                 .into(detailsFlowerImageView)
         }
+
+
 
         binding.addReviewTitle.visibility = View.GONE
         binding.userRatingBar.visibility = View.GONE
@@ -529,8 +545,6 @@ class DetailsActivity : AppCompatActivity() {
     }
 
 
-
-
     // New helper method to find flower key and then submit review
     private fun findFlowerKeyAndThenSubmitReview(userId: String) {
         val flowersRef = database.reference.child("list")
@@ -709,7 +723,7 @@ class DetailsActivity : AppCompatActivity() {
 
         val vndFormat = NumberFormat.getCurrencyInstance(localeVN)
         vndFormat.currency = currencyVN
-        return vndFormat.format(amount)
+        return vndFormat.format(amount.toInt() * 1000)
     }
 
     private fun addItemToCart(menuItem: MenuItem) {

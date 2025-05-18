@@ -23,12 +23,24 @@
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/arrow_left" />
 
+        <TextView
+            android:id="@+id/pageTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chi tiết sản phẩm"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/imageButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/imageButton" />
+
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView4"
             android:layout_width="0dp"
             android:layout_height="265dp"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="32dp"
             app:cardCornerRadius="10dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -38,7 +50,7 @@
             <ImageView
                 android:id="@+id/detailsFlowerImageView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:scaleType="centerCrop"
                 tools:srcCompat="@tools:sample/backgrounds/scenic" />
 
@@ -48,39 +60,83 @@
             android:id="@+id/detailFlowerName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="16dp"
             android:text="FlowerName"
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="@+id/cardView4"
             app:layout_constraintTop_toBottomOf="@+id/cardView4" />
 
-        <!-- Buttons for Buy and Add to Cart -->
+        <TextView
+            android:id="@+id/tagProduct"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/sale_badge_shape"
+            android:text="SALE"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="@+id/detailFlowerName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.75"
+            app:layout_constraintStart_toEndOf="@+id/detailFlowerName"
+            app:layout_constraintTop_toTopOf="@+id/detailFlowerName"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/realPrice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="235.000đ"
+            android:textColor="#9E9E9E"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="@+id/detailFlowerName"
+            app:layout_constraintTop_toBottomOf="@+id/detailFlowerName" />
 
         <TextView
             android:id="@+id/priceTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="200.000đ"
+            android:layout_marginTop="4dp"
+            android:text="200.000"
             android:textColor="@android:color/holo_red_light"
             android:textSize="16sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="@+id/detailFlowerName"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="@+id/detailFlowerName"
-            app:layout_constraintTop_toBottomOf="@+id/detailFlowerName" />
+            app:layout_constraintStart_toStartOf="@+id/realPrice"
+            app:layout_constraintTop_toBottomOf="@+id/realPrice" />
+
+        <TextView
+            android:id="@+id/textView13"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="VND"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/priceTextView"
+            app:layout_constraintStart_toEndOf="@+id/priceTextView"
+            app:layout_constraintTop_toTopOf="@+id/priceTextView" />
+
+        <ImageView
+            android:id="@+id/imageView5"
+            android:layout_width="187dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="@+id/priceTextView"
+            app:layout_constraintTop_toBottomOf="@+id/priceTextView"
+            app:srcCompat="@drawable/hinh_do_trong" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/addToCartButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
             android:layout_marginEnd="32dp"
             android:background="@drawable/addtocardshape"
             android:drawableEnd="@drawable/cart"
             android:paddingEnd="5dp"
             android:text="Thêm vào giỏ hàng"
-            android:textSize="15sp"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="@+id/imageView5"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/imageView5"
             app:layout_constraintTop_toTopOf="@+id/imageView5" />
@@ -89,7 +145,7 @@
             android:id="@+id/textView21"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
             android:text="Miêu tả ngắn"
             android:textStyle="bold"
@@ -100,12 +156,11 @@
             android:id="@+id/detailDescriptionTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="32dp"
             android:text="Hoa ly là loài hoa thanh lịch, hương thơm nồng nàn, thường tượng trưng cho sự tinh khiết, quý phái và lòng biết ơn."
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView21" />
 
@@ -113,7 +168,7 @@
             android:id="@+id/textView23"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
             android:text="Chi tiết"
             android:textStyle="bold"
@@ -124,9 +179,9 @@
             android:id="@+id/detailIngredients"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="32dp"
             android:text="Chi tiet san pham \nChi tiet san pham \nChi tiet san pham"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -137,7 +192,7 @@
             android:id="@+id/reviewsTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="24dp"
             android:text="Đánh giá và Bình luận"
             android:textSize="16sp"
@@ -150,7 +205,7 @@
             style="?android:attr/ratingBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
             android:isIndicator="true"
             android:numStars="5"
@@ -174,9 +229,9 @@
             android:id="@+id/addReviewCardView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="32dp"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -197,6 +252,18 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
+                <TextView
+                    android:id="@+id/ycMH"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="🌷 Chỉ người ĐÃ TRẢI mới được REVIEW nha! Mua rồi mình cùng chia sẻ cảm nhận nhé 💬✨"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/addReviewTitle" />
+
                 <RatingBar
                     android:id="@+id/userRatingBar"
                     android:layout_width="wrap_content"
@@ -205,7 +272,7 @@
                     android:numStars="5"
                     android:stepSize="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/addReviewTitle" />
+                    app:layout_constraintTop_toBottomOf="@+id/ycMH" />
 
                 <EditText
                     android:id="@+id/reviewEditText"
@@ -222,19 +289,10 @@
                     app:layout_constraintTop_toBottomOf="@+id/userRatingBar" />
 
                 <TextView
-                    android:id="@+id/ycMH"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🌷 Chỉ người ĐÃ TRẢI mới được REVIEW nha!Mua rồi mình cùng chia sẻ cảm nhận nhé 💬✨"
-                    android:textStyle="bold"
-                    tools:ignore="MissingConstraints" />
-
-                <TextView
                     android:id="@+id/photoLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="16dp"
                     android:text="Thêm ảnh (tùy chọn):"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/reviewEditText" />
@@ -243,26 +301,11 @@
                     android:id="@+id/addImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
                     android:text="Chọn ảnh"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/photoLabel" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/selectedImagesRecyclerView"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:orientation="horizontal"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/addImageButton" />
-
-                <!-- Submit Review Button -->
                 <Button
                     android:id="@+id/submitReviewButton"
                     android:layout_width="wrap_content"
@@ -272,16 +315,27 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/reviewEditText" />
 
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/selectedImagesRecyclerView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/addImageButton" />
+
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/reviewsRecyclerView"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="32dp"
             android:nestedScrollingEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -294,7 +348,7 @@
             android:id="@+id/suggestedProductsTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="24dp"
             android:text="Sản phẩm gợi ý khác"
             android:textSize="16sp"
@@ -304,66 +358,20 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/suggestedProductsRecyclerView"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            android:layout_marginStart="32dp"
             android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="32dp"
             android:layout_marginBottom="16dp"
             android:nestedScrollingEnabled="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/suggestedProductsTitle"
+            app:layout_constraintVertical_bias="0.0"
             tools:itemCount="4"
             tools:listitem="@layout/item_product" />
-
-        <TextView
-            android:id="@+id/textView13"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text="VND"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="@+id/priceTextView"
-            app:layout_constraintStart_toEndOf="@+id/priceTextView"
-            app:layout_constraintTop_toTopOf="@+id/priceTextView"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Chi tiết sản phẩm"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/cardView4"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.432"
-            app:layout_constraintStart_toEndOf="@+id/imageButton"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.484" />
-
-        <ImageView
-            android:id="@+id/imageView5"
-            android:layout_width="187dp"
-            android:layout_height="45dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/priceTextView"
-            app:srcCompat="@drawable/hinh_do_trong" />
-
-        <TextView
-            android:id="@+id/tagProduct"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="156dp"
-            android:background="@drawable/sale_badge_shape"
-            android:text="SALE"
-            app:layout_constraintBottom_toBottomOf="@+id/detailFlowerName"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/detailFlowerName"
-            app:layout_constraintTop_toTopOf="@+id/detailFlowerName"
-            app:layout_constraintVertical_bias="1.0" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>
