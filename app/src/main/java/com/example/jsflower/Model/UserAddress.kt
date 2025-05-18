@@ -1,10 +1,9 @@
 package com.example.jsflower.Model
 
 data class UserAddress(
-    val id: String = "",
-    val userId: String = "",
+    var id: String = "",
     val address: String = "",
-    val isDefault: Boolean = false,
-    val recipientName: String = "",
-    val phoneNumber: String = ""
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val isDefault: Boolean = false
 )

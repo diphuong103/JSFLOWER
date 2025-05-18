@@ -101,16 +101,19 @@
             android:paddingEnd="8dp"
             android:text="Địa chỉ" />
 
-        <EditText
+        <TextView
             android:id="@+id/etAddress"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0.7"
             android:background="@null"
-            android:hint="Nhập địa chỉ của bạn"
-            android:inputType="text"
+            android:hint="Chọn địa chỉ"
             android:paddingStart="8dp"
-            android:paddingEnd="16dp" />
+            android:paddingEnd="16dp"
+            android:textColor="@android:color/black"
+            android:clickable="true"
+            android:focusable="false" />
+
     </LinearLayout>
 
     <LinearLayout

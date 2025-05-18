@@ -31,13 +31,13 @@
             android:name=".ForgetPasswordActivity"
             android:exported="false" />
         <activity
+            android:name=".AddEditAddressActivity"
+            android:exported="false" />
+        <activity
             android:name=".DetailsActivity"
             android:exported="false" />
         <activity
             android:name=".PayOutActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ChooseLocationActivity"
             android:exported="false" />
         <activity
             android:name=".SignActivity"

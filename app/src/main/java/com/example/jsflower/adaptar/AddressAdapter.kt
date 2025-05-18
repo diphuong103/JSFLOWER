@@ -19,10 +19,34 @@ class AddressAdapter(
         fun onDeleteClick(address: UserAddress)
     }
 
-    class AddressViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val tvAddress: TextView = view.findViewById(R.id.tvAddress)
-        val btnEdit: ImageButton = view.findViewById(R.id.btnEditAddress)
-        val btnDelete: ImageButton = view.findViewById(R.id.btnDeleteAddress)
+    inner class AddressViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvAddress: TextView = itemView.findViewById(R.id.tvAddress)
+        val tvDefault: TextView = itemView.findViewById(R.id.tvDefault)
+        val btnEdit: ImageButton = itemView.findViewById(R.id.btnEdit)
+        val btnDelete: ImageButton = itemView.findViewById(R.id.btnDelete)
+
+        init {
+            itemView.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onAddressClick(addresses[position])
+                }
+            }
+
+            btnEdit.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onEditClick(addresses[position])
+                }
+            }
+
+            btnDelete.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    listener.onDeleteClick(addresses[position])
+                }
+            }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddressViewHolder {
@@ -35,19 +59,13 @@ class AddressAdapter(
         val address = addresses[position]
         holder.tvAddress.text = address.address
 
-        // Set click listeners
-        holder.itemView.setOnClickListener {
-            listener.onAddressClick(address)
-        }
-
-        holder.btnEdit.setOnClickListener {
-            listener.onEditClick(address)
-        }
-
-        holder.btnDelete.setOnClickListener {
-            listener.onDeleteClick(address)
+        // Show "Default" text if the address is marked as default
+        if (address.isDefault) {
+            holder.tvDefault.visibility = View.VISIBLE
+        } else {
+            holder.tvDefault.visibility = View.GONE
         }
     }
 
-    override fun getItemCount() = addresses.size
+    override fun getItemCount(): Int = addresses.size
 }

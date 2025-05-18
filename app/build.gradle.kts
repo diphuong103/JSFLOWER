@@ -111,6 +111,12 @@ dependencies {
 
     implementation (libs.androidx.core)
 
+    // map
+    implementation (libs.android.sdk)
+
+    implementation (libs.play.services.location)
+
+
 
 
 

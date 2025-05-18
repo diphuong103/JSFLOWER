@@ -1,5 +1,6 @@
 package com.example.jsflower
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -37,6 +38,9 @@ class PayOutActivity : AppCompatActivity() {
     private lateinit var address: String
     private lateinit var phone: String
 
+    private val REQUEST_SELECT_ADDRESS = 1001
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPayOutBinding.inflate(layoutInflater)
@@ -49,9 +53,12 @@ class PayOutActivity : AppCompatActivity() {
         flowerItemName = intent.getStringArrayListExtra("FlowerItemName") ?: arrayListOf()
         flowerItemPrice = intent.getStringArrayListExtra("FlowerItemPrice") ?: arrayListOf()
         flowerItemImage = intent.getStringArrayListExtra("FlowerItemImage") ?: arrayListOf()
-        flowerItemDesciption = intent.getStringArrayListExtra("FlowerItemDescription") ?: arrayListOf()
-        flowerItemIngredient = intent.getStringArrayListExtra("FlowerItemIngredient") ?: arrayListOf()
-        flowerItemQuantities = intent.getIntegerArrayListExtra("FlowerItemQuantities") ?: arrayListOf()
+        flowerItemDesciption =
+            intent.getStringArrayListExtra("FlowerItemDescription") ?: arrayListOf()
+        flowerItemIngredient =
+            intent.getStringArrayListExtra("FlowerItemIngredient") ?: arrayListOf()
+        flowerItemQuantities =
+            intent.getIntegerArrayListExtra("FlowerItemQuantities") ?: arrayListOf()
         flowerItemKeys = intent.getStringArrayListExtra("FlowerItemKey") ?: arrayListOf()
 
         setUserData()
@@ -82,7 +89,8 @@ class PayOutActivity : AppCompatActivity() {
 
             val selectedPaymentId = binding.paymentMethodGroup.checkedRadioButtonId
             if (selectedPaymentId == -1) {
-                Toast.makeText(this, "Vui lòng chọn phương thức thanh toán", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Vui lòng chọn phương thức thanh toán", Toast.LENGTH_SHORT)
+                    .show()
                 return@setOnClickListener
             }
 
@@ -102,7 +110,23 @@ class PayOutActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener {
             finish()
         }
+
+
+        binding.layoutAddress.setOnClickListener {
+            val intent = Intent(this, ListAddressActivity::class.java)
+            startActivityForResult(intent, REQUEST_SELECT_ADDRESS)
+        }
     }
+        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SELECT_ADDRESS && resultCode == Activity.RESULT_OK) {
+            val selectedAddress = data?.getStringExtra("selectedAddress")
+            if (!selectedAddress.isNullOrEmpty()) {
+                binding.etAddress.setText(selectedAddress)
+            }
+        }
+    }
+
 
     private fun placeOrder(paymentMethod: String, isPaidOnline: Boolean) {
         if (userId.isEmpty()) {
@@ -236,8 +260,24 @@ class PayOutActivity : AppCompatActivity() {
         userRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 binding.etName.setText(snapshot.child("name").getValue(String::class.java) ?: "")
-                binding.etAddress.setText(snapshot.child("address").getValue(String::class.java) ?: "")
                 binding.etPhone.setText(snapshot.child("phone").getValue(String::class.java) ?: "")
+
+                // Lấy địa chỉ mặc định trong listaddress
+                val addressSnapshot = snapshot.child("listaddress")
+                var defaultAddress: String? = null
+                for (addressNode in addressSnapshot.children) {
+                    val isDefault = addressNode.child("isDefault").getValue(Boolean::class.java) ?: false
+                    if (isDefault) {
+                        defaultAddress = addressNode.child("address").getValue(String::class.java)
+                        break
+                    }
+                }
+
+                if (!defaultAddress.isNullOrEmpty()) {
+                    binding.etAddress.setText(defaultAddress)
+                } else {
+                    binding.etAddress.setText(snapshot.child("address").getValue(String::class.java) ?: "")
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
