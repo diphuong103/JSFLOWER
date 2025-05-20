@@ -171,6 +171,9 @@ class PayOutActivity : AppCompatActivity() {
                 saveOrderToOrders(orderPushKey, productKeyQuantityMap, isPaidOnline)
                 clearCart(userId)
 
+                pushNotificationToAdmin(orderDetails)
+
+
                 val invoiceFile = PdfGenerator.createInvoicePDF(this, orderDetails)
                 if (invoiceFile != null) {
                     binding.viewInvoiceButton.visibility = View.VISIBLE
@@ -364,4 +367,27 @@ class PayOutActivity : AppCompatActivity() {
                 Log.e("PayOut", "Lỗi khi lưu đơn hàng vào node orders: ${it.message}")
             }
     }
+
+    private fun pushNotificationToAdmin(orderDetails: OrderDetails) {
+        val adminUserId = "A1y4z8nuLVMjod8FnwKtVv5gzxp1"
+
+        val notificationRef = databaseReference.child("notifications").child("admin").child(adminUserId)
+
+        val notificationData = mapOf(
+            "title" to "Đơn hàng mới",
+            "body" to "Bạn có đơn hàng mới từ ${orderDetails.userName}",
+            "timestamp" to System.currentTimeMillis(),
+            "type" to "order",
+            "isRead" to false
+        )
+
+        notificationRef.push().setValue(notificationData)
+            .addOnSuccessListener {
+                Log.d("PayOut", "Đã lưu thông báo đơn hàng tới admin")
+            }
+            .addOnFailureListener { e ->
+                Log.e("PayOut", "Lỗi lưu thông báo: ${e.message}")
+            }
+    }
+
 }

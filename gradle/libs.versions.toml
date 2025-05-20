@@ -57,6 +57,7 @@ firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-messaging-ktx = { module = "com.google.firebase:firebase-messaging-ktx" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 google-firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
 imageslideshow = { module = "com.github.denzcoskun:ImageSlideshow", version.ref = "imageslideshow" }

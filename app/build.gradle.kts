@@ -116,6 +116,9 @@ dependencies {
 
     implementation (libs.play.services.location)
 
+    implementation (libs.firebase.messaging.ktx)
+
+    implementation("org.json:json:20211205")
 
 
 

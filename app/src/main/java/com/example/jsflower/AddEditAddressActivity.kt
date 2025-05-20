@@ -27,6 +27,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import java.util.Locale
 import java.util.UUID
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+
 
 class AddEditAddressActivity : AppCompatActivity() {
 
@@ -138,27 +142,79 @@ class AddEditAddressActivity : AppCompatActivity() {
     }
 
     private fun updateAddressFromGeoPoint(geoPoint: GeoPoint) {
-        val geocoder = Geocoder(this, Locale.getDefault())
-        try {
-            val addresses = geocoder.getFromLocation(geoPoint.latitude, geoPoint.longitude, 1)
-            if (addresses != null && addresses.isNotEmpty()) {
-                val address = addresses[0]
-                val fullAddress = buildString {
-                    if (!address.thoroughfare.isNullOrEmpty()) append(address.thoroughfare + ", ")
-                    if (!address.subLocality.isNullOrEmpty()) append(address.subLocality + ", ")
-                    if (!address.locality.isNullOrEmpty()) append(address.locality + ", ")
-                    if (!address.adminArea.isNullOrEmpty()) append(address.adminArea + ", ")
-                    if (!address.countryName.isNullOrEmpty()) append(address.countryName)
-                }
-                etAddress.setText(fullAddress)
-            } else {
-                etAddress.setText("Location: ${geoPoint.latitude}, ${geoPoint.longitude}")
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            etAddress.setText("Location: ${geoPoint.latitude}, ${geoPoint.longitude}")
+//        val geocoder = Geocoder(this, Locale.getDefault())
+//        try {
+//            val addresses = geocoder.getFromLocation(geoPoint.latitude, geoPoint.longitude, 1)
+//            if (!addresses.isNullOrEmpty()) {
+//                val address = addresses[0]
+//
+//                // Lấy thoroughfare (tên đường), fallback các trường khác nếu thoroughfare trống
+//                val road = address.thoroughfare ?: ""
+//                val subLocality = address.subLocality ?: ""
+//                val locality = address.locality ?: ""
+//                val adminArea = address.adminArea ?: ""
+//                val country = address.countryName ?: ""
+//
+//                val displayAddress = when {
+//                    road.isNotEmpty() -> road
+//                    subLocality.isNotEmpty() -> subLocality
+//                    locality.isNotEmpty() -> locality
+//                    adminArea.isNotEmpty() -> adminArea
+//                    country.isNotEmpty() -> country
+//                    else -> "Location: ${geoPoint.latitude}, ${geoPoint.longitude}"
+//                }
+//
+//                // Gán địa chỉ ra EditText
+//                etAddress.setText(displayAddress)
+//                android.util.Log.d("Geocoder", "Address found: $displayAddress")
+//
+//            } else {
+//                etAddress.setText("Location: ${geoPoint.latitude}, ${geoPoint.longitude}")
+//                android.util.Log.w("Geocoder", "No address found for location")
+//            }
+//        } catch (e: Exception) {
+//            e.printStackTrace()
+//            etAddress.setText("Location: ${geoPoint.latitude}, ${geoPoint.longitude}")
+//        }
+        getAddressFromCoordinatesOSM(geoPoint.latitude, geoPoint.longitude) { address ->
+            etAddress.setText(address)
         }
     }
+
+
+    fun getAddressFromCoordinatesOSM(latitude: Double, longitude: Double, callback: (String) -> Unit) {
+        val client = OkHttpClient()
+        val url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=$latitude&lon=$longitude"
+
+        Thread {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "JSFlowerApp/1.0")
+                    .build()
+                val response = client.newCall(request).execute()
+                val responseBody = response.body?.string()
+
+                if (!responseBody.isNullOrEmpty()) {
+                    val json = JSONObject(responseBody)
+                    val displayName = json.optString("display_name", "Không tìm thấy địa chỉ")
+                    runOnUiThread {
+                        callback(displayName)
+                    }
+                } else {
+                    runOnUiThread {
+                        callback("Không tìm thấy địa chỉ")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    callback("Lỗi khi lấy địa chỉ")
+                }
+            }
+        }.start()
+    }
+
 
     private fun toggleMapVisibility() {
         mapVisible = !mapVisible
